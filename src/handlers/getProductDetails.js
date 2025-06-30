@@ -1,22 +1,30 @@
 "use strict";
 
-const BusinessLogic = require("../services/productService");
+const ProductService = require("../services/productService");
 
-const logic = new BusinessLogic();
+const productService = new ProductService();
 
 exports.handler = async (event, context) => {
   try {
-    // Pass event to business logic
-    const result = await logic.process(event);
+    const productId = event.pathParameters?.productId;
+    if (!productId) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: "Product ID is required" }),
+      };
+    }
+    
+    const product = productService.getProductById(productId);
     return {
       statusCode: 200,
-      body: JSON.stringify(result),
+      body: JSON.stringify(product),
     };
   } catch (err) {
     console.error("Lambda Error:", err);
+    const statusCode = err.message === "Product not found" ? 404 : 500;
     return {
-      statusCode: 500,
-      body: JSON.stringify({ error: "Internal Server Error" }),
+      statusCode,
+      body: JSON.stringify({ error: err.message || "Internal Server Error" }),
     };
   }
 };

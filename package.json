@@ -5,12 +5,13 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"No test specified\" && exit 0",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "start": "serverless offline start"
   },
   "author": "Your Name",
   "license": "MIT",
-  "dependencies": {},
   "devDependencies": {
-    "eslint": "^8.0.0"
+    "eslint": "^8.0.0",
+    "serverless-offline": "^14.4.0"
   }
 }
