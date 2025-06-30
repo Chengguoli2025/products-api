@@ -1,0 +1,57 @@
+pipeline {
+    agent any
+    
+    parameters {
+        choice(name: 'ENVIRONMENT', choices: ['dev', 'staging', 'prod'], description: 'Deployment Environment')
+    }
+    
+    environment {
+        AWS_DEFAULT_REGION = 'ap-southeast-2'
+        AWS_CREDENTIALS = credentials('aws-credentials')
+    }
+    
+    stages {
+        stage('Download Artifact') {
+            steps {
+                script {
+                    env.GIT_SHA = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                }
+                copyArtifacts(
+                    projectName: 'products-api-ci',
+                    selector: lastSuccessful(),
+                    filter: 'products-api-${GIT_SHA}.zip'
+                )
+                sh 'unzip -o products-api-${GIT_SHA}.zip'
+            }
+        }
+        
+        stage('Deploy to Lambda') {
+            steps {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                    sh """
+                        serverless deploy --stage ${params.ENVIRONMENT} --region ap-southeast-2
+                    """
+                }
+            }
+        }
+        
+        stage('Health Check') {
+            steps {
+                script {
+                    def apiUrl = sh(
+                        script: "serverless info --stage ${params.ENVIRONMENT} | grep 'GET - ' | head -1 | awk '{print \$3}'",
+                        returnStdout: true
+                    ).trim()
+                    
+                    sh "curl -f ${apiUrl}/products || exit 1"
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}

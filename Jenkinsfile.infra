@@ -1,0 +1,80 @@
+pipeline {
+    agent any
+    
+    parameters {
+        choice(name: 'ACTION', choices: ['deploy', 'destroy'], description: 'Infrastructure Action')
+        choice(name: 'ENVIRONMENT', choices: ['dev', 'staging', 'prod'], description: 'Environment')
+    }
+    
+    environment {
+        AWS_DEFAULT_REGION = 'ap-southeast-2'
+        DOMAIN_NAME = 'tonyffenochezra.com'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Deploy Infrastructure') {
+            when {
+                expression { params.ACTION == 'deploy' }
+            }
+            steps {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                    sh """
+                        aws cloudformation deploy \
+                            --template-file infrastructure/api-gateway.yaml \
+                            --stack-name products-api-gateway-${params.ENVIRONMENT} \
+                            --parameter-overrides \
+                                Environment=${params.ENVIRONMENT} \
+                                DomainName=${env.DOMAIN_NAME} \
+                                SubDomain=product-api.${params.ENVIRONMENT} \
+                            --capabilities CAPABILITY_IAM
+                    """
+                }
+            }
+        }
+        
+        stage('Configure Route53') {
+            when {
+                expression { params.ACTION == 'deploy' }
+            }
+            steps {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                    sh """
+                        aws cloudformation deploy \
+                            --template-file infrastructure/route53.yaml \
+                            --stack-name products-api-dns-${params.ENVIRONMENT} \
+                            --parameter-overrides \
+                                Environment=${params.ENVIRONMENT} \
+                                DomainName=${env.DOMAIN_NAME} \
+                                SubDomain=product-api.${params.ENVIRONMENT}
+                    """
+                }
+            }
+        }
+        
+        stage('Destroy Infrastructure') {
+            when {
+                expression { params.ACTION == 'destroy' }
+            }
+            steps {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                    sh """
+                        aws cloudformation delete-stack --stack-name products-api-dns-${params.ENVIRONMENT}
+                        aws cloudformation delete-stack --stack-name products-api-gateway-${params.ENVIRONMENT}
+                    """
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
