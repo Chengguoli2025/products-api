@@ -19,7 +19,7 @@ Resources:
       DomainName: !Sub '${SubDomain}.${DomainName}'
       ValidationMethod: DNS
       
-  DomainName:
+  ApiDomainName:
     Type: AWS::ApiGateway::DomainName
     Properties:
       DomainName: !Sub '${SubDomain}.${DomainName}'
@@ -28,7 +28,7 @@ Resources:
   BasePathMapping:
     Type: AWS::ApiGateway::BasePathMapping
     Properties:
-      DomainName: !Ref DomainName
+      DomainName: !Ref ApiDomainName
       RestApiId: !Ref ApiGateway
       Stage: !Ref Environment
 
