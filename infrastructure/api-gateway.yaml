@@ -16,43 +16,7 @@ Resources:
     Properties:
       Name: !Sub 'products-api-${Environment}'
       
-  ApiGatewayResource:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      RestApiId: !Ref ApiGateway
-      ParentId: !GetAtt ApiGateway.RootResourceId
-      PathPart: health
-      
-  ApiGatewayMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      RestApiId: !Ref ApiGateway
-      ResourceId: !Ref ApiGatewayResource
-      HttpMethod: GET
-      AuthorizationType: NONE
-      Integration:
-        Type: MOCK
-        RequestTemplates:
-          application/json: '{"statusCode": 200}'
-        IntegrationResponses:
-          - StatusCode: 200
-            ResponseTemplates:
-              application/json: '{"status": "OK"}'
-      MethodResponses:
-        - StatusCode: 200
-      
-  ApiGatewayDeployment:
-    Type: AWS::ApiGateway::Deployment
-    DependsOn: ApiGatewayMethod
-    Properties:
-      RestApiId: !Ref ApiGateway
-      
-  ApiGatewayStage:
-    Type: AWS::ApiGateway::Stage
-    Properties:
-      RestApiId: !Ref ApiGateway
-      DeploymentId: !Ref ApiGatewayDeployment
-      StageName: !Ref Environment
+
       
   ApiDomainName:
     Type: AWS::ApiGateway::DomainName
@@ -68,7 +32,7 @@ Resources:
     Properties:
       DomainName: !Ref ApiDomainName
       RestApiId: !Ref ApiGateway
-      Stage: !Ref ApiGatewayStage
+      Stage: !Ref Environment
 
 Outputs:
   ApiGatewayId:
