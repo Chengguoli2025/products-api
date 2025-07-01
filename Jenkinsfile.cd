@@ -14,23 +14,54 @@ pipeline {
         stage('Download Artifact') {
             steps {
                 script {
-                    env.GIT_SHA = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    try {
+                        env.GIT_SHA = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                        echo "Looking for artifact: products-api-${env.GIT_SHA}.zip"
+                        
+                        copyArtifacts(
+                            projectName: 'products-api-ci',
+                            selector: lastSuccessful(),
+                            filter: "products-api-${env.GIT_SHA}.zip"
+                        )
+                        
+                        echo "Artifact downloaded successfully"
+                        sh "ls -la products-api-${env.GIT_SHA}.zip"
+                        sh "unzip -o products-api-${env.GIT_SHA}.zip"
+                        sh "ls -la"
+                    } catch (Exception e) {
+                        echo "Error in Download Artifact stage: ${e.getMessage()}"
+                        echo "Available artifacts in CI job:"
+                        sh "curl -u admin:admin http://jenkins:8080/job/products-api-ci/lastSuccessfulBuild/api/json?tree=artifacts[*] || echo 'Could not fetch artifacts info'"
+                        throw e
+                    }
                 }
-                copyArtifacts(
-                    projectName: 'products-api-ci',
-                    selector: lastSuccessful(),
-                    filter: 'products-api-${GIT_SHA}.zip'
-                )
-                sh 'unzip -o products-api-${GIT_SHA}.zip'
             }
         }
         
         stage('Deploy to Lambda') {
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-                    sh """
-                        serverless deploy --stage ${params.ENVIRONMENT} --region ap-southeast-2
-                    """
+                    script {
+                        try {
+                            echo "Starting deployment to ${params.ENVIRONMENT}"
+                            sh "ls -la"
+                            sh "cat serverless.yml | head -20"
+                            
+                            def deployResult = sh(
+                                script: "serverless deploy --stage ${params.ENVIRONMENT} --region ap-southeast-2 --verbose",
+                                returnStatus: true
+                            )
+                            
+                            if (deployResult != 0) {
+                                error("Serverless deployment failed with exit code: ${deployResult}")
+                            }
+                            
+                            echo "Deployment completed successfully"
+                        } catch (Exception e) {
+                            echo "Error in Deploy stage: ${e.getMessage()}"
+                            throw e
+                        }
+                    }
                 }
             }
         }
