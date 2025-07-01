@@ -56,7 +56,7 @@ pipeline {
                                 sh "aws cloudformation describe-stacks --stack-name products-api-gateway-${params.ENVIRONMENT} --query 'Stacks[0].{Status:StackStatus,Reason:StackStatusReason}' --output table"
                                 
                                 echo "=== Failed Events ==="
-                                sh "aws cloudformation describe-stack-events --stack-name products-api-gateway-${params.ENVIRONMENT} --query 'StackEvents[?ResourceStatus==\`CREATE_FAILED\` || ResourceStatus==\`UPDATE_FAILED\` || ResourceStatus==\`ROLLBACK_IN_PROGRESS\`].[Timestamp,LogicalResourceId,ResourceStatus,ResourceStatusReason]' --output table"
+                                sh "aws cloudformation describe-stack-events --stack-name products-api-gateway-${params.ENVIRONMENT} --query 'StackEvents[?ResourceStatus==`CREATE_FAILED` || ResourceStatus==`UPDATE_FAILED` || ResourceStatus==`ROLLBACK_IN_PROGRESS`].[Timestamp,LogicalResourceId,ResourceStatus,ResourceStatusReason]' --output table"
                                 
                                 echo "=== All Recent Events ==="
                                 sh "aws cloudformation describe-stack-events --stack-name products-api-gateway-${params.ENVIRONMENT} --max-items 10 --query 'StackEvents[].[Timestamp,LogicalResourceId,ResourceStatus,ResourceStatusReason]' --output table"
@@ -103,7 +103,7 @@ pipeline {
                                 sh "aws cloudformation describe-stacks --stack-name products-api-dns-${params.ENVIRONMENT} --query 'Stacks[0].{Status:StackStatus,Reason:StackStatusReason}' --output table"
                                 
                                 echo "=== Failed Events ==="
-                                sh "aws cloudformation describe-stack-events --stack-name products-api-dns-${params.ENVIRONMENT} --query 'StackEvents[?ResourceStatus==\`CREATE_FAILED\` || ResourceStatus==\`UPDATE_FAILED\` || ResourceStatus==\`ROLLBACK_IN_PROGRESS\`].[Timestamp,LogicalResourceId,ResourceStatus,ResourceStatusReason]' --output table"
+                                sh "aws cloudformation describe-stack-events --stack-name products-api-dns-${params.ENVIRONMENT} --query 'StackEvents[?ResourceStatus==`CREATE_FAILED` || ResourceStatus==`UPDATE_FAILED` || ResourceStatus==`ROLLBACK_IN_PROGRESS`].[Timestamp,LogicalResourceId,ResourceStatus,ResourceStatusReason]' --output table"
                                 
                                 echo "=== All Recent Events ==="
                                 sh "aws cloudformation describe-stack-events --stack-name products-api-dns-${params.ENVIRONMENT} --max-items 10 --query 'StackEvents[].[Timestamp,LogicalResourceId,ResourceStatus,ResourceStatusReason]' --output table"
