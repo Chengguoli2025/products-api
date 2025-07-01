@@ -61,11 +61,45 @@ pipeline {
         
         stage('Deploy Application') {
             steps {
-                script {
-                    echo "Application deployment to ${params.ENVIRONMENT}"
-                    echo "Using API Gateway infrastructure - no serverless deployment needed"
-                    echo "Application code is ready for integration with API Gateway"
-                    sh "ls -la"
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                    script {
+                        try {
+                            echo "Deploying application code to Lambda functions in ${params.ENVIRONMENT}"
+                            
+                            // Update Lambda function code
+                            def functionName = "products-api-${params.ENVIRONMENT}"
+                            
+                            echo "Updating Lambda function: ${functionName}"
+                            def updateResult = sh(
+                                script: """
+                                    aws lambda update-function-code \
+                                        --function-name ${functionName} \
+                                        --zip-file fileb://products-api-${env.GIT_SHA}.zip \
+                                        --region ap-southeast-2
+                                """,
+                                returnStatus: true
+                            )
+                            
+                            if (updateResult != 0) {
+                                error("Lambda function update failed with exit code: ${updateResult}")
+                            }
+                            
+                            echo "Lambda function updated successfully"
+                            
+                            // Wait for function to be updated
+                            sh """
+                                aws lambda wait function-updated \
+                                    --function-name ${functionName} \
+                                    --region ap-southeast-2
+                            """
+                            
+                            echo "Lambda function is ready"
+                            
+                        } catch (Exception e) {
+                            echo "Error in Deploy Application stage: ${e.getMessage()}"
+                            throw e
+                        }
+                    }
                 }
             }
         }
