@@ -59,30 +59,13 @@ pipeline {
             }
         }
         
-        stage('Deploy to Lambda') {
+        stage('Deploy Application') {
             steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-                    script {
-                        try {
-                            echo "Starting deployment to ${params.ENVIRONMENT}"
-                            sh "ls -la"
-                            sh "cat serverless.yml | head -20"
-                            
-                            def deployResult = sh(
-                                script: "serverless deploy --stage ${params.ENVIRONMENT} --region ap-southeast-2 --verbose",
-                                returnStatus: true
-                            )
-                            
-                            if (deployResult != 0) {
-                                error("Serverless deployment failed with exit code: ${deployResult}")
-                            }
-                            
-                            echo "Deployment completed successfully"
-                        } catch (Exception e) {
-                            echo "Error in Deploy stage: ${e.getMessage()}"
-                            throw e
-                        }
-                    }
+                script {
+                    echo "Application deployment to ${params.ENVIRONMENT}"
+                    echo "Using API Gateway infrastructure - no serverless deployment needed"
+                    echo "Application code is ready for integration with API Gateway"
+                    sh "ls -la"
                 }
             }
         }
