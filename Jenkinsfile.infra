@@ -27,17 +27,36 @@ pipeline {
                     [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials'],
                     string(credentialsId: "acm-certificate-arn-${params.ENVIRONMENT}", variable: 'CERTIFICATE_ARN')
                 ]) {
-                    sh """
-                        aws cloudformation deploy \
-                            --template-file infrastructure/api-gateway.yaml \
-                            --stack-name products-api-gateway-${params.ENVIRONMENT} \
-                            --parameter-overrides \
-                                Environment=${params.ENVIRONMENT} \
-                                DomainName=${env.DOMAIN_NAME} \
-                                SubDomain=product-api.${params.ENVIRONMENT} \
-                                CertificateArn=${CERTIFICATE_ARN} \
-                            --capabilities CAPABILITY_IAM
-                    """
+                    script {
+                        def deployResult = sh(
+                            script: """
+                                aws cloudformation deploy \
+                                    --template-file infrastructure/api-gateway.yaml \
+                                    --stack-name products-api-gateway-${params.ENVIRONMENT} \
+                                    --parameter-overrides \
+                                        Environment=${params.ENVIRONMENT} \
+                                        DomainName=${env.DOMAIN_NAME} \
+                                        SubDomain=product-api.${params.ENVIRONMENT} \
+                                        CertificateArn=${CERTIFICATE_ARN} \
+                                    --capabilities CAPABILITY_IAM
+                            """,
+                            returnStatus: true
+                        )
+                        
+                        if (deployResult != 0) {
+                            def stackExists = sh(
+                                script: "aws cloudformation describe-stacks --stack-name products-api-gateway-${params.ENVIRONMENT}",
+                                returnStatus: true
+                            ) == 0
+                            
+                            if (stackExists) {
+                                sh "aws cloudformation describe-stack-events --stack-name products-api-gateway-${params.ENVIRONMENT}"
+                            } else {
+                                echo "Stack does not exist. No events to fetch."
+                            }
+                            error("CloudFormation deployment failed")
+                        }
+                    }
                 }
             }
         }
@@ -48,15 +67,34 @@ pipeline {
             }
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-                    sh """
-                        aws cloudformation deploy \
-                            --template-file infrastructure/route53.yaml \
-                            --stack-name products-api-dns-${params.ENVIRONMENT} \
-                            --parameter-overrides \
-                                Environment=${params.ENVIRONMENT} \
-                                DomainName=${env.DOMAIN_NAME} \
-                                SubDomain=product-api.${params.ENVIRONMENT}
-                    """
+                    script {
+                        def deployResult = sh(
+                            script: """
+                                aws cloudformation deploy \
+                                    --template-file infrastructure/route53.yaml \
+                                    --stack-name products-api-dns-${params.ENVIRONMENT} \
+                                    --parameter-overrides \
+                                        Environment=${params.ENVIRONMENT} \
+                                        DomainName=${env.DOMAIN_NAME} \
+                                        SubDomain=product-api.${params.ENVIRONMENT}
+                            """,
+                            returnStatus: true
+                        )
+                        
+                        if (deployResult != 0) {
+                            def stackExists = sh(
+                                script: "aws cloudformation describe-stacks --stack-name products-api-dns-${params.ENVIRONMENT}",
+                                returnStatus: true
+                            ) == 0
+                            
+                            if (stackExists) {
+                                sh "aws cloudformation describe-stack-events --stack-name products-api-dns-${params.ENVIRONMENT}"
+                            } else {
+                                echo "Stack does not exist. No events to fetch."
+                            }
+                            error("CloudFormation deployment failed")
+                        }
+                    }
                 }
             }
         }
