@@ -16,18 +16,33 @@ Resources:
     Properties:
       Name: !Sub 'products-api-${Environment}'
       
+  ApiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId: !Ref ApiGateway
+      
+  ApiGatewayStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref ApiGateway
+      DeploymentId: !Ref ApiGatewayDeployment
+      StageName: !Ref Environment
+      
   ApiDomainName:
     Type: AWS::ApiGateway::DomainName
     Properties:
       DomainName: !Sub '${SubDomain}.${DomainName}'
-      CertificateArn: !Ref CertificateArn
+      RegionalCertificateArn: !Ref CertificateArn
+      DomainNameConfigurations:
+        - CertificateArn: !Ref CertificateArn
+          EndpointType: REGIONAL
       
   BasePathMapping:
     Type: AWS::ApiGateway::BasePathMapping
     Properties:
       DomainName: !Ref ApiDomainName
       RestApiId: !Ref ApiGateway
-      Stage: !Ref Environment
+      Stage: !Ref ApiGatewayStage
 
 Outputs:
   ApiGatewayId:
