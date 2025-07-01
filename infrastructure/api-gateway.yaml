@@ -33,9 +33,9 @@ Resources:
     Properties:
       DomainName: !Sub '${SubDomain}.${DomainName}'
       RegionalCertificateArn: !Ref CertificateArn
-      DomainNameConfigurations:
-        - CertificateArn: !Ref CertificateArn
-          EndpointType: REGIONAL
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
       
   BasePathMapping:
     Type: AWS::ApiGateway::BasePathMapping
