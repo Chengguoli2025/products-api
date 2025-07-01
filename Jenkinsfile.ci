@@ -8,15 +8,9 @@ pipeline {
             }
         }
         
-        stage('Setup Node.js') {
+        stage('Verify Node.js') {
             steps {
                 sh '''
-                    # Install NVM and Node.js
-                    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-                    export NVM_DIR="$HOME/.nvm"
-                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-                    nvm install 18
-                    nvm use 18
                     node --version
                     npm --version
                 '''
@@ -25,34 +19,19 @@ pipeline {
         
         stage('Install Dependencies') {
             steps {
-                sh '''
-                    export NVM_DIR="$HOME/.nvm"
-                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-                    nvm use 18
-                    npm install
-                '''
+                sh 'npm install'
             }
         }
         
         stage('Unit Tests') {
             steps {
-                sh '''
-                    export NVM_DIR="$HOME/.nvm"
-                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-                    nvm use 18
-                    npm test
-                '''
+                sh 'npm test'
             }
         }
         
         stage('Security Scan') {
             steps {
-                sh '''
-                    export NVM_DIR="$HOME/.nvm"
-                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-                    nvm use 18
-                    npm audit --audit-level=high
-                '''
+                sh 'npm audit --audit-level=high'
             }
         }
         
