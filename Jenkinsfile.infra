@@ -23,6 +23,9 @@ pipeline {
                 expression { params.ACTION == 'deploy' }
             }
             steps {
+                script {
+                    env.CERTIFICATE_ARN = credentials("acm-certificate-arn-${params.ENVIRONMENT}")
+                }
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
                     sh """
                         aws cloudformation deploy \
@@ -32,6 +35,7 @@ pipeline {
                                 Environment=${params.ENVIRONMENT} \
                                 DomainName=${env.DOMAIN_NAME} \
                                 SubDomain=product-api.${params.ENVIRONMENT} \
+                                CertificateArn=${env.CERTIFICATE_ARN} \
                             --capabilities CAPABILITY_IAM
                     """
                 }

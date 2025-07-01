@@ -6,6 +6,9 @@ Parameters:
     Type: String
   SubDomain:
     Type: String
+  CertificateArn:
+    Type: String
+    Description: Pre-created ACM certificate ARN
 
 Resources:
   ApiGateway:
@@ -13,17 +16,11 @@ Resources:
     Properties:
       Name: !Sub 'products-api-${Environment}'
       
-  Certificate:
-    Type: AWS::CertificateManager::Certificate
-    Properties:
-      DomainName: !Sub '${SubDomain}.${DomainName}'
-      ValidationMethod: DNS
-      
   ApiDomainName:
     Type: AWS::ApiGateway::DomainName
     Properties:
       DomainName: !Sub '${SubDomain}.${DomainName}'
-      CertificateArn: !Ref Certificate
+      CertificateArn: !Ref CertificateArn
       
   BasePathMapping:
     Type: AWS::ApiGateway::BasePathMapping
