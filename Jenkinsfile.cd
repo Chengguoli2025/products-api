@@ -25,11 +25,34 @@ pipeline {
                         }
                         echo "Looking for artifact: products-api-${env.GIT_SHA}.zip"
                         
-                        copyArtifacts(
-                            projectName: 'products-api-ci',
-                            selector: lastSuccessful(),
-                            filter: "products-api-${env.GIT_SHA}.zip"
-                        )
+                        // Try to copy artifact directly from CI job workspace
+                        def ciJobPath = "/var/jenkins_home/jobs/products-api-ci/builds"
+                        def artifactFound = false
+                        
+                        // Find the artifact in recent builds
+                        def builds = sh(
+                            script: "ls -1t ${ciJobPath} | head -10",
+                            returnStdout: true
+                        ).trim().split('\n')
+                        
+                        for (build in builds) {
+                            def artifactPath = "${ciJobPath}/${build}/archive/products-api-${env.GIT_SHA}.zip"
+                            def exists = sh(
+                                script: "test -f ${artifactPath} && echo 'true' || echo 'false'",
+                                returnStdout: true
+                            ).trim()
+                            
+                            if (exists == 'true') {
+                                echo "Found artifact in build ${build}"
+                                sh "cp ${artifactPath} ."
+                                artifactFound = true
+                                break
+                            }
+                        }
+                        
+                        if (!artifactFound) {
+                            error("Could not find artifact products-api-${env.GIT_SHA}.zip in any recent CI builds")
+                        }
                         
                         echo "Artifact downloaded successfully"
                         sh "ls -la products-api-${env.GIT_SHA}.zip"
@@ -38,7 +61,7 @@ pipeline {
                     } catch (Exception e) {
                         echo "Error in Download Artifact stage: ${e.getMessage()}"
                         echo "Available artifacts in CI job:"
-                        sh "curl -u admin:admin http://jenkins:8080/job/products-api-ci/lastSuccessfulBuild/api/json?tree=artifacts[*] || echo 'Could not fetch artifacts info'"
+                        sh "find /var/jenkins_home/jobs/products-api-ci/builds/*/archive/ -name '*.zip' 2>/dev/null || echo 'No artifacts found'"
                         throw e
                     }
                 }
