@@ -38,10 +38,7 @@ pipeline {
         stage('Health Check') {
             steps {
                 script {
-                    def apiUrl = sh(
-                        script: "serverless info --stage ${params.ENVIRONMENT} | grep 'GET - ' | head -1 | awk '{print \$3}'",
-                        returnStdout: true
-                    ).trim()
+                    def apiUrl = "https://product-api.${params.ENVIRONMENT}.tonyffenochezra.com"
                     
                     sh "curl -f ${apiUrl}/products || exit 1"
                 }
