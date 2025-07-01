@@ -23,10 +23,10 @@ pipeline {
                 expression { params.ACTION == 'deploy' }
             }
             steps {
-                script {
-                    env.CERTIFICATE_ARN = credentials("acm-certificate-arn-${params.ENVIRONMENT}")
-                }
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials'],
+                    string(credentialsId: "acm-certificate-arn-${params.ENVIRONMENT}", variable: 'CERTIFICATE_ARN')
+                ]) {
                     sh """
                         aws cloudformation deploy \
                             --template-file infrastructure/api-gateway.yaml \
@@ -35,7 +35,7 @@ pipeline {
                                 Environment=${params.ENVIRONMENT} \
                                 DomainName=${env.DOMAIN_NAME} \
                                 SubDomain=product-api.${params.ENVIRONMENT} \
-                                CertificateArn=${env.CERTIFICATE_ARN} \
+                                CertificateArn=${CERTIFICATE_ARN} \
                             --capabilities CAPABILITY_IAM
                     """
                 }
