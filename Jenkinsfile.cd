@@ -3,6 +3,7 @@ pipeline {
     
     parameters {
         choice(name: 'ENVIRONMENT', choices: ['dev', 'staging', 'prod'], description: 'Deployment Environment')
+        string(name: 'GIT_SHA', defaultValue: '', description: 'Git commit SHA to deploy (leave empty for latest)')
     }
     
     environment {
@@ -15,7 +16,13 @@ pipeline {
             steps {
                 script {
                     try {
-                        env.GIT_SHA = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                        if (params.GIT_SHA) {
+                            env.GIT_SHA = params.GIT_SHA
+                            echo "Using provided GIT_SHA: ${env.GIT_SHA}"
+                        } else {
+                            env.GIT_SHA = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                            echo "Using current HEAD GIT_SHA: ${env.GIT_SHA}"
+                        }
                         echo "Looking for artifact: products-api-${env.GIT_SHA}.zip"
                         
                         copyArtifacts(
