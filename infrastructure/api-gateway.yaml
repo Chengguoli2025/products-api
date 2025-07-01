@@ -6,23 +6,26 @@ Parameters:
     Type: String
   SubDomain:
     Type: String
-  CertificateArn:
-    Type: String
-    Description: Pre-created ACM certificate ARN
 
 Resources:
+  Certificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref DomainName
+      SubjectAlternativeNames:
+        - !Sub '*.${DomainName}'
+      ValidationMethod: DNS
+      
   ApiGateway:
     Type: AWS::ApiGateway::RestApi
     Properties:
       Name: !Sub 'products-api-${Environment}'
       
-
-      
   ApiDomainName:
     Type: AWS::ApiGateway::DomainName
     Properties:
       DomainName: !Sub '${SubDomain}.${DomainName}'
-      RegionalCertificateArn: !Ref CertificateArn
+      RegionalCertificateArn: !Ref Certificate
       EndpointConfiguration:
         Types:
           - REGIONAL

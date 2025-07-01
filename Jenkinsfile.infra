@@ -24,8 +24,7 @@ pipeline {
             }
             steps {
                 withCredentials([
-                    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials'],
-                    string(credentialsId: "acm-certificate-arn-${params.ENVIRONMENT}", variable: 'CERTIFICATE_ARN')
+                    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']
                 ]) {
                     script {
                         def deployResult = sh(
@@ -37,7 +36,7 @@ pipeline {
                                         Environment=${params.ENVIRONMENT} \
                                         DomainName=${env.DOMAIN_NAME} \
                                         SubDomain=product-api.${params.ENVIRONMENT} \
-                                        CertificateArn=${CERTIFICATE_ARN} \
+
                                     --capabilities CAPABILITY_IAM
                             """,
                             returnStatus: true
