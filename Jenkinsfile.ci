@@ -39,9 +39,9 @@ pipeline {
             steps {
                 script {
                     env.GIT_SHA = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    sh "zip -r products-api-${env.GIT_SHA}.zip src/ serverless.yml package.json"
+                    archiveArtifacts artifacts: "products-api-${env.GIT_SHA}.zip"
                 }
-                sh 'zip -r products-api-${GIT_SHA}.zip src/ serverless.yml package.json'
-                archiveArtifacts artifacts: 'products-api-${GIT_SHA}.zip'
             }
         }
     }
