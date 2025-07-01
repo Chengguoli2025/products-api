@@ -25,33 +25,24 @@ pipeline {
                         }
                         echo "Looking for artifact: products-api-${env.GIT_SHA}.zip"
                         
-                        // Try to copy artifact directly from CI job workspace
-                        def ciJobPath = "/var/jenkins_home/jobs/products-api-ci/builds"
-                        def artifactFound = false
+                        // Look for artifact in shared folder
+                        def artifactPath = "/tmp/jenkins-artifacts/products-api-${env.GIT_SHA}.zip"
                         
-                        // Find the artifact in recent builds
-                        def builds = sh(
-                            script: "ls -1t ${ciJobPath} | head -10",
+                        echo "Looking for artifact at: ${artifactPath}"
+                        sh "ls -la /tmp/jenkins-artifacts/ || echo 'Artifacts directory does not exist'"
+                        
+                        def exists = sh(
+                            script: "test -f ${artifactPath} && echo 'true' || echo 'false'",
                             returnStdout: true
-                        ).trim().split('\n')
+                        ).trim()
                         
-                        for (build in builds) {
-                            def artifactPath = "${ciJobPath}/${build}/archive/products-api-${env.GIT_SHA}.zip"
-                            def exists = sh(
-                                script: "test -f ${artifactPath} && echo 'true' || echo 'false'",
-                                returnStdout: true
-                            ).trim()
-                            
-                            if (exists == 'true') {
-                                echo "Found artifact in build ${build}"
-                                sh "cp ${artifactPath} ."
-                                artifactFound = true
-                                break
-                            }
-                        }
-                        
-                        if (!artifactFound) {
-                            error("Could not find artifact products-api-${env.GIT_SHA}.zip in any recent CI builds")
+                        if (exists == 'true') {
+                            echo "Found artifact, copying to workspace"
+                            sh "cp ${artifactPath} ."
+                        } else {
+                            echo "Available artifacts:"
+                            sh "ls -la /tmp/jenkins-artifacts/ || echo 'No artifacts found'"
+                            error("Could not find artifact products-api-${env.GIT_SHA}.zip")
                         }
                         
                         echo "Artifact downloaded successfully"

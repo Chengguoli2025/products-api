@@ -39,8 +39,20 @@ pipeline {
             steps {
                 script {
                     env.GIT_SHA = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    
+                    // Create shared artifacts directory
+                    sh "mkdir -p /tmp/jenkins-artifacts"
+                    
+                    // Create zip file
                     sh "zip -r products-api-${env.GIT_SHA}.zip src/ serverless.yml package.json"
+                    
+                    // Copy to shared location
+                    sh "cp products-api-${env.GIT_SHA}.zip /tmp/jenkins-artifacts/"
+                    
+                    // Also archive for Jenkins UI
                     archiveArtifacts artifacts: "products-api-${env.GIT_SHA}.zip"
+                    
+                    echo "Artifact saved to /tmp/jenkins-artifacts/products-api-${env.GIT_SHA}.zip"
                 }
             }
         }
