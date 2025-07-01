@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:18-alpine'
-            args '-u root'
-        }
-    }
+    agent any
     
     stages {
         stage('Checkout') {
@@ -13,9 +8,15 @@ pipeline {
             }
         }
         
-        stage('Verify Node.js') {
+        stage('Setup Node.js') {
             steps {
                 sh '''
+                    # Install NVM and Node.js
+                    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+                    export NVM_DIR="$HOME/.nvm"
+                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                    nvm install 18
+                    nvm use 18
                     node --version
                     npm --version
                 '''
@@ -24,19 +25,34 @@ pipeline {
         
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
+                sh '''
+                    export NVM_DIR="$HOME/.nvm"
+                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                    nvm use 18
+                    npm install
+                '''
             }
         }
         
         stage('Unit Tests') {
             steps {
-                sh 'npm test'
+                sh '''
+                    export NVM_DIR="$HOME/.nvm"
+                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                    nvm use 18
+                    npm test
+                '''
             }
         }
         
         stage('Security Scan') {
             steps {
-                sh 'npm audit --audit-level=high'
+                sh '''
+                    export NVM_DIR="$HOME/.nvm"
+                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                    nvm use 18
+                    npm audit --audit-level=high
+                '''
             }
         }
         
