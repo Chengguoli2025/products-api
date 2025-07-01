@@ -1,14 +1,21 @@
 pipeline {
     agent any
     
-    tools {
-        nodejs '18'
-    }
-    
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
+            }
+        }
+        
+        stage('Setup Node.js') {
+            steps {
+                sh '''
+                    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+                    sudo apt-get install -y nodejs
+                    node --version
+                    npm --version
+                '''
             }
         }
         
