@@ -15,17 +15,7 @@ Resources:
       Name: !Sub '${SubDomain}.${DomainName}'
       Type: A
       AliasTarget:
-        DNSName: !GetAtt ApiGatewayDomainName.DistributionDomainName
-        HostedZoneId: !GetAtt ApiGatewayDomainName.DistributionHostedZoneId
-        
-  ApiGatewayDomainName:
-    Type: AWS::ApiGateway::DomainName
-    Properties:
-      DomainName: !Sub '${SubDomain}.${DomainName}'
-      CertificateArn: !Ref Certificate
-      
-  Certificate:
-    Type: AWS::CertificateManager::Certificate
-    Properties:
-      DomainName: !Sub '${SubDomain}.${DomainName}'
-      ValidationMethod: DNS
+        DNSName: 
+          Fn::ImportValue: !Sub 'products-api-gateway-${Environment}-DomainName'
+        HostedZoneId:
+          Fn::ImportValue: !Sub 'products-api-gateway-${Environment}-HostedZoneId'

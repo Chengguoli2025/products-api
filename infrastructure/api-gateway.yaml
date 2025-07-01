@@ -11,9 +11,7 @@ Resources:
   Certificate:
     Type: AWS::CertificateManager::Certificate
     Properties:
-      DomainName: !Ref DomainName
-      SubjectAlternativeNames:
-        - !Sub '*.${DomainName}'
+      DomainName: !Sub '${SubDomain}.${DomainName}'
       ValidationMethod: DNS
       
   ApiGateway:
@@ -36,3 +34,13 @@ Outputs:
     Value: !Ref ApiGateway
     Export:
       Name: !Sub '${AWS::StackName}-ApiGatewayId'
+      
+  DomainName:
+    Value: !GetAtt ApiDomainName.RegionalDomainName
+    Export:
+      Name: !Sub '${AWS::StackName}-DomainName'
+      
+  HostedZoneId:
+    Value: !GetAtt ApiDomainName.RegionalHostedZoneId
+    Export:
+      Name: !Sub '${AWS::StackName}-HostedZoneId'
