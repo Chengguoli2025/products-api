@@ -26,45 +26,16 @@ pipeline {
                 withCredentials([
                     [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']
                 ]) {
-                    script {
-                        def deployResult = sh(
-                            script: """
-                                aws cloudformation deploy \
-                                    --template-file infrastructure/api-gateway.yaml \
-                                    --stack-name products-api-gateway-${params.ENVIRONMENT} \
-                                    --parameter-overrides \
-                                        Environment=${params.ENVIRONMENT} \
-                                        DomainName=${env.DOMAIN_NAME} \
-                                        SubDomain=product-api.${params.ENVIRONMENT} \
-
-                                    --capabilities CAPABILITY_IAM
-                            """,
-                            returnStatus: true
-                        )
-                        
-                        if (deployResult != 0) {
-                            echo "CloudFormation deployment failed. Gathering error details..."
-                            
-                            def stackExists = sh(
-                                script: "aws cloudformation describe-stacks --stack-name products-api-gateway-${params.ENVIRONMENT}",
-                                returnStatus: true
-                            ) == 0
-                            
-                            if (stackExists) {
-                                echo "=== Stack Status ==="
-                                sh "aws cloudformation describe-stacks --stack-name products-api-gateway-${params.ENVIRONMENT} --query 'Stacks[0].{Status:StackStatus,Reason:StackStatusReason}' --output table"
-                                
-                                echo "=== Failed Events ==="
-                                sh "aws cloudformation describe-stack-events --stack-name products-api-gateway-${params.ENVIRONMENT} --query 'StackEvents[?ResourceStatus==`CREATE_FAILED` || ResourceStatus==`UPDATE_FAILED` || ResourceStatus==`ROLLBACK_IN_PROGRESS`].[Timestamp,LogicalResourceId,ResourceStatus,ResourceStatusReason]' --output table"
-                                
-                                echo "=== All Recent Events ==="
-                                sh "aws cloudformation describe-stack-events --stack-name products-api-gateway-${params.ENVIRONMENT} --max-items 10 --query 'StackEvents[].[Timestamp,LogicalResourceId,ResourceStatus,ResourceStatusReason]' --output table"
-                            } else {
-                                echo "Stack does not exist. Deployment may have failed during creation."
-                            }
-                            error("CloudFormation deployment failed")
-                        }
-                    }
+                    sh """
+                        aws cloudformation deploy \
+                            --template-file infrastructure/api-gateway.yaml \
+                            --stack-name products-api-gateway-${params.ENVIRONMENT} \
+                            --parameter-overrides \
+                                Environment=${params.ENVIRONMENT} \
+                                DomainName=${env.DOMAIN_NAME} \
+                                SubDomain=product-api.${params.ENVIRONMENT} \
+                            --capabilities CAPABILITY_IAM
+                    """
                 }
             }
         }
@@ -75,43 +46,15 @@ pipeline {
             }
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-                    script {
-                        def deployResult = sh(
-                            script: """
-                                aws cloudformation deploy \
-                                    --template-file infrastructure/route53.yaml \
-                                    --stack-name products-api-dns-${params.ENVIRONMENT} \
-                                    --parameter-overrides \
-                                        Environment=${params.ENVIRONMENT} \
-                                        DomainName=${env.DOMAIN_NAME} \
-                                        SubDomain=product-api.${params.ENVIRONMENT}
-                            """,
-                            returnStatus: true
-                        )
-                        
-                        if (deployResult != 0) {
-                            echo "CloudFormation deployment failed. Gathering error details..."
-                            
-                            def stackExists = sh(
-                                script: "aws cloudformation describe-stacks --stack-name products-api-dns-${params.ENVIRONMENT}",
-                                returnStatus: true
-                            ) == 0
-                            
-                            if (stackExists) {
-                                echo "=== Stack Status ==="
-                                sh "aws cloudformation describe-stacks --stack-name products-api-dns-${params.ENVIRONMENT} --query 'Stacks[0].{Status:StackStatus,Reason:StackStatusReason}' --output table"
-                                
-                                echo "=== Failed Events ==="
-                                sh "aws cloudformation describe-stack-events --stack-name products-api-dns-${params.ENVIRONMENT} --query 'StackEvents[?ResourceStatus==`CREATE_FAILED` || ResourceStatus==`UPDATE_FAILED` || ResourceStatus==`ROLLBACK_IN_PROGRESS`].[Timestamp,LogicalResourceId,ResourceStatus,ResourceStatusReason]' --output table"
-                                
-                                echo "=== All Recent Events ==="
-                                sh "aws cloudformation describe-stack-events --stack-name products-api-dns-${params.ENVIRONMENT} --max-items 10 --query 'StackEvents[].[Timestamp,LogicalResourceId,ResourceStatus,ResourceStatusReason]' --output table"
-                            } else {
-                                echo "Stack does not exist. Deployment may have failed during creation."
-                            }
-                            error("CloudFormation deployment failed")
-                        }
-                    }
+                    sh """
+                        aws cloudformation deploy \
+                            --template-file infrastructure/route53.yaml \
+                            --stack-name products-api-dns-${params.ENVIRONMENT} \
+                            --parameter-overrides \
+                                Environment=${params.ENVIRONMENT} \
+                                DomainName=${env.DOMAIN_NAME} \
+                                SubDomain=product-api.${params.ENVIRONMENT}
+                    """
                 }
             }
         }
