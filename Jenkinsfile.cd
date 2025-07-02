@@ -95,7 +95,7 @@ pipeline {
                                     sh """
                                         aws lambda update-function-configuration \
                                             --function-name ${func} \
-                                            --environment Variables='{"NODE_ENV":"${params.ENVIRONMENT}","DFA_API":"https://daf.${params.ENVIRONMENT}.tonyffenochezra.com"}' \
+                                            --environment 'Variables={NODE_ENV=${params.ENVIRONMENT},DFA_API=https://daf.${params.ENVIRONMENT}.tonyffenochezra.com}' \
                                             --region ap-southeast-2
                                     """
                                     
