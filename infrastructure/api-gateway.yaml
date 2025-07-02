@@ -45,6 +45,10 @@ Resources:
       Runtime: nodejs18.x
       Handler: src/handlers/getAllProducts.handler
       Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Environment
+          DFA_API: !Sub 'https://daf.${Environment}.tonyffenochezra.com'
       Code:
         ZipFile: |
           exports.handler = async (event) => {
@@ -64,6 +68,10 @@ Resources:
       Runtime: nodejs18.x
       Handler: src/handlers/getProductDetails.handler
       Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Environment
+          DFA_API: !Sub 'https://daf.${Environment}.tonyffenochezra.com'
       Code:
         ZipFile: |
           exports.handler = async (event) => {
@@ -83,6 +91,10 @@ Resources:
       Runtime: nodejs18.x
       Handler: src/handlers/addProduct.handler
       Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Environment
+          DFA_API: !Sub 'https://daf.${Environment}.tonyffenochezra.com'
       Code:
         ZipFile: |
           exports.handler = async (event) => {

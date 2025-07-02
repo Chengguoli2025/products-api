@@ -83,12 +83,22 @@ pipeline {
                                 ).trim()
                                 
                                 if (functionExists == 'true') {
+                                    // Update function code
                                     sh """
                                         aws lambda update-function-code \
                                             --function-name ${func} \
                                             --zip-file fileb://products-api-${env.GIT_SHA}.zip \
                                             --region ap-southeast-2
                                     """
+                                    
+                                    // Update environment variables
+                                    sh """
+                                        aws lambda update-function-configuration \
+                                            --function-name ${func} \
+                                            --environment Variables='{"NODE_ENV":"${params.ENVIRONMENT}","DFA_API":"https://daf.${params.ENVIRONMENT}.tonyffenochezra.com"}' \
+                                            --region ap-southeast-2
+                                    """
+                                    
                                     echo "Updated Lambda function: ${func}"
                                 } else {
                                     echo "Warning: Lambda function ${func} does not exist. Please run infrastructure pipeline first."
