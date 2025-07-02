@@ -143,7 +143,7 @@ pipeline {
                             echo "Updating API Gateway integrations..."
                             
                             def apiGatewayId = sh(
-                                script: "aws apigateway get-rest-apis --query 'items[?name==\`products-api-${params.ENVIRONMENT}\`].id' --output text --region ap-southeast-2",
+                                script: "aws apigateway get-rest-apis --query 'items[?name==`products-api-${params.ENVIRONMENT}`].id' --output text --region ap-southeast-2",
                                 returnStdout: true
                             ).trim()
                             
