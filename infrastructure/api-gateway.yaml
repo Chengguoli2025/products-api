@@ -6,6 +6,14 @@ Parameters:
     Type: String
   SubDomain:
     Type: String
+  CreateLambdaFunctions:
+    Type: String
+    Default: 'true'
+    AllowedValues: ['true', 'false']
+    Description: 'Set to false if Lambda functions already exist'
+
+Conditions:
+  ShouldCreateLambdaFunctions: !Equals [!Ref CreateLambdaFunctions, 'true']
 
 Resources:
   Certificate:
@@ -29,6 +37,9 @@ Resources:
       
   GetAllProductsFunction:
     Type: AWS::Lambda::Function
+    Condition: ShouldCreateLambdaFunctions
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       FunctionName: !Sub 'products-api-getAllProducts-${Environment}'
       Runtime: nodejs18.x
@@ -45,6 +56,9 @@ Resources:
           
   GetProductDetailsFunction:
     Type: AWS::Lambda::Function
+    Condition: ShouldCreateLambdaFunctions
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       FunctionName: !Sub 'products-api-getProductDetails-${Environment}'
       Runtime: nodejs18.x
@@ -61,6 +75,9 @@ Resources:
           
   AddProductFunction:
     Type: AWS::Lambda::Function
+    Condition: ShouldCreateLambdaFunctions
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       FunctionName: !Sub 'products-api-addProduct-${Environment}'
       Runtime: nodejs18.x
@@ -99,7 +116,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetAllProductsFunction.Arn}/invocations'
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:products-api-getAllProducts-${Environment}/invocations'
         
   # POST /products - addProduct
   PostProductsMethod:
@@ -112,7 +129,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AddProductFunction.Arn}/invocations'
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:products-api-addProduct-${Environment}/invocations'
         
   # /products/{productId} resource
   ProductIdResource:
@@ -133,13 +150,13 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetProductDetailsFunction.Arn}/invocations'
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:products-api-getProductDetails-${Environment}/invocations'
         
   # Lambda permissions
   GetAllProductsPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref GetAllProductsFunction
+      FunctionName: !Sub 'products-api-getAllProducts-${Environment}'
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub '${ApiGateway}/*/*'
@@ -147,7 +164,7 @@ Resources:
   GetProductDetailsPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref GetProductDetailsFunction
+      FunctionName: !Sub 'products-api-getProductDetails-${Environment}'
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub '${ApiGateway}/*/*'
@@ -155,7 +172,7 @@ Resources:
   AddProductPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref AddProductFunction
+      FunctionName: !Sub 'products-api-addProduct-${Environment}'
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub '${ApiGateway}/*/*'

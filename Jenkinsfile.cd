@@ -66,73 +66,32 @@ pipeline {
                         try {
                             echo "Deploying application code to Lambda functions in ${params.ENVIRONMENT}"
                             
-                            // Deploy all 3 Lambda functions from serverless.yml
+                            // Update all 3 Lambda functions (infrastructure pipeline creates them)
                             def functions = [
-                                [name: "products-api-getAllProducts-${params.ENVIRONMENT}", handler: "src/handlers/getAllProducts.handler"],
-                                [name: "products-api-getProductDetails-${params.ENVIRONMENT}", handler: "src/handlers/getProductDetails.handler"],
-                                [name: "products-api-addProduct-${params.ENVIRONMENT}", handler: "src/handlers/addProduct.handler"]
+                                "products-api-getAllProducts-${params.ENVIRONMENT}",
+                                "products-api-getProductDetails-${params.ENVIRONMENT}",
+                                "products-api-addProduct-${params.ENVIRONMENT}"
                             ]
                             
-                            // Create shared IAM role first
-                            def roleName = "lambda-execution-role-${params.ENVIRONMENT}"
-                            echo "Creating/checking IAM role: ${roleName}"
-                            
-                            sh """
-                                aws iam create-role \
-                                    --role-name ${roleName} \
-                                    --assume-role-policy-document '{
-                                        "Version": "2012-10-17",
-                                        "Statement": [{
-                                            "Effect": "Allow",
-                                            "Principal": {"Service": "lambda.amazonaws.com"},
-                                            "Action": "sts:AssumeRole"
-                                        }]
-                                    }' \
-                                    --region ap-southeast-2 || echo 'Role already exists'
-                            """
-                            
-                            sh """
-                                aws iam attach-role-policy \
-                                    --role-name ${roleName} \
-                                    --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole \
-                                    --region ap-southeast-2 || echo 'Policy already attached'
-                            """
-                            
-                            sleep(5) // Wait for role to be ready
-                            
-                            def roleArn = sh(
-                                script: "aws iam get-role --role-name ${roleName} --query 'Role.Arn' --output text --region ap-southeast-2",
-                                returnStdout: true
-                            ).trim()
-                            
-                            // Deploy each Lambda function
+                            // Update each Lambda function with new code
                             for (func in functions) {
-                                echo "Processing Lambda function: ${func.name}"
+                                echo "Updating Lambda function: ${func}"
                                 
                                 def functionExists = sh(
-                                    script: "aws lambda get-function --function-name ${func.name} --region ap-southeast-2 >/dev/null 2>&1 && echo 'true' || echo 'false'",
+                                    script: "aws lambda get-function --function-name ${func} --region ap-southeast-2 >/dev/null 2>&1 && echo 'true' || echo 'false'",
                                     returnStdout: true
                                 ).trim()
                                 
-                                if (functionExists == 'false') {
-                                    echo "Creating Lambda function: ${func.name}"
-                                    sh """
-                                        aws lambda create-function \
-                                            --function-name ${func.name} \
-                                            --runtime nodejs18.x \
-                                            --role ${roleArn} \
-                                            --handler ${func.handler} \
-                                            --zip-file fileb://products-api-${env.GIT_SHA}.zip \
-                                            --region ap-southeast-2
-                                    """
-                                } else {
-                                    echo "Updating Lambda function: ${func.name}"
+                                if (functionExists == 'true') {
                                     sh """
                                         aws lambda update-function-code \
-                                            --function-name ${func.name} \
+                                            --function-name ${func} \
                                             --zip-file fileb://products-api-${env.GIT_SHA}.zip \
                                             --region ap-southeast-2
                                     """
+                                    echo "Updated Lambda function: ${func}"
+                                } else {
+                                    echo "Warning: Lambda function ${func} does not exist. Please run infrastructure pipeline first."
                                 }
                             }
 
