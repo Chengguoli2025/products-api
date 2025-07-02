@@ -91,6 +91,13 @@ pipeline {
                                             --region ap-southeast-2
                                     """
                                     
+                                    // Wait for code update to complete
+                                    sh """
+                                        aws lambda wait function-updated \
+                                            --function-name ${func} \
+                                            --region ap-southeast-2
+                                    """
+                                    
                                     // Update environment variables
                                     sh """
                                         aws lambda update-function-configuration \
