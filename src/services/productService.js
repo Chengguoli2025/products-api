@@ -4,8 +4,24 @@ class ProductService {
   constructor() {
     // In-memory storage for demo - replace with database in production
     this.products = [
-      { id: "1", name: "Product 1", price: 29.99, description: "Sample product 1" },
-      { id: "2", name: "Product 2", price: 49.99, description: "Sample product 2" }
+      {
+        id: "1000",
+        name: "Product 1",
+        price: 29.99,
+        description: "Sample product 1",
+      },
+      {
+        id: "2000",
+        name: "Product 2",
+        price: 49.99,
+        description: "Sample product 2",
+      },
+      {
+        id: "3000",
+        name: "Product 3",
+        price: 19.99,
+        description: "Sample product 3",
+      },
     ];
   }
 
@@ -14,7 +30,7 @@ class ProductService {
   }
 
   getProductById(productId) {
-    const product = this.products.find(p => p.id === productId);
+    const product = this.products.find((p) => p.id === productId);
     if (!product) {
       throw new Error("Product not found");
     }
@@ -24,7 +40,7 @@ class ProductService {
   addProduct(productData) {
     const newProduct = {
       id: Date.now().toString(),
-      ...productData
+      ...productData,
     };
     this.products.push(newProduct);
     return newProduct;
