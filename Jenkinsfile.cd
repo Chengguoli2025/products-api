@@ -138,30 +138,7 @@ pipeline {
 
                             
                             echo "All Lambda functions deployed successfully"
-                            
-                            // Update API Gateway integrations to point to the deployed functions
-                            echo "Updating API Gateway integrations..."
-                            
-                            def apiGatewayId = sh(
-                                script: "aws apigateway get-rest-apis --query 'items[?name==`products-api-${params.ENVIRONMENT}`].id' --output text --region ap-southeast-2",
-                                returnStdout: true
-                            ).trim()
-                            
-                            if (apiGatewayId) {
-                                echo "Found API Gateway: ${apiGatewayId}"
-                                
-                                // Create a new deployment to refresh the API Gateway
-                                sh """
-                                    aws apigateway create-deployment \
-                                        --rest-api-id ${apiGatewayId} \
-                                        --stage-name ${params.ENVIRONMENT} \
-                                        --region ap-southeast-2
-                                """
-                                
-                                echo "API Gateway deployment updated"
-                            } else {
-                                echo "API Gateway not found. Please deploy infrastructure first."
-                            }
+                            echo "Note: Run infrastructure pipeline to connect API Gateway to these Lambda functions"
                             
                         } catch (Exception e) {
                             echo "Error in Deploy Application stage: ${e.getMessage()}"
