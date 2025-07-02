@@ -27,16 +27,28 @@ pipeline {
                 withCredentials([
                     [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']
                 ]) {
-                    sh """
-                        aws cloudformation deploy \
-                            --template-file infrastructure/api-gateway.yaml \
-                            --stack-name products-api-gateway-${params.ENVIRONMENT} \
-                            --parameter-overrides \
-                                Environment=${params.ENVIRONMENT} \
-                                DomainName=${env.DOMAIN_NAME} \
-                                SubDomain=product-api.${params.ENVIRONMENT} \
-                            --capabilities CAPABILITY_IAM
-                    """
+                    script {
+                        // Check if Lambda functions already exist
+                        def functionsExist = sh(
+                            script: "aws lambda get-function --function-name products-api-getAllProducts-${params.ENVIRONMENT} --region ap-southeast-2 >/dev/null 2>&1 && echo 'true' || echo 'false'",
+                            returnStdout: true
+                        ).trim()
+                        
+                        def createLambdaFunctions = (functionsExist == 'false') ? 'true' : 'false'
+                        echo "Lambda functions exist: ${functionsExist}, will create: ${createLambdaFunctions}"
+                        
+                        sh """
+                            aws cloudformation deploy \
+                                --template-file infrastructure/api-gateway.yaml \
+                                --stack-name products-api-gateway-${params.ENVIRONMENT} \
+                                --parameter-overrides \
+                                    Environment=${params.ENVIRONMENT} \
+                                    DomainName=${env.DOMAIN_NAME} \
+                                    SubDomain=product-api.${params.ENVIRONMENT} \
+                                    CreateLambdaFunctions=${createLambdaFunctions} \
+                                --capabilities CAPABILITY_IAM
+                        """
+                    }
                 }
             }
         }

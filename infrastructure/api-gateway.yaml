@@ -159,7 +159,7 @@ Resources:
       FunctionName: !Sub 'products-api-getAllProducts-${Environment}'
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub '${ApiGateway}/*/*'
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*'
       
   GetProductDetailsPermission:
     Type: AWS::Lambda::Permission
@@ -167,7 +167,7 @@ Resources:
       FunctionName: !Sub 'products-api-getProductDetails-${Environment}'
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub '${ApiGateway}/*/*'
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*'
       
   AddProductPermission:
     Type: AWS::Lambda::Permission
@@ -175,7 +175,7 @@ Resources:
       FunctionName: !Sub 'products-api-addProduct-${Environment}'
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub '${ApiGateway}/*/*'
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*'
       
   ApiGatewayDeployment:
     Type: AWS::ApiGateway::Deployment
