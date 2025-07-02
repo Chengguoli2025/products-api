@@ -139,15 +139,6 @@ pipeline {
                             
                             echo "All Lambda functions deployed successfully"
                             
-                            // Wait for function to be updated
-                            sh """
-                                aws lambda wait function-updated \
-                                    --function-name ${functionName} \
-                                    --region ap-southeast-2
-                            """
-                            
-                            echo "Lambda function is ready"
-                            
                         } catch (Exception e) {
                             echo "Error in Deploy Application stage: ${e.getMessage()}"
                             throw e
