@@ -27,19 +27,51 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       
-  LambdaFunction:
+  GetAllProductsFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Sub 'products-api-${Environment}'
+      FunctionName: !Sub 'products-api-getAllProducts-${Environment}'
       Runtime: nodejs18.x
-      Handler: src/index.handler
+      Handler: src/handlers/getAllProducts.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Code:
         ZipFile: |
           exports.handler = async (event) => {
             return {
               statusCode: 200,
-              body: JSON.stringify({ message: 'Hello from Lambda!' })
+              body: JSON.stringify({ message: 'Get all products' })
+            };
+          };
+          
+  GetProductDetailsFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'products-api-getProductDetails-${Environment}'
+      Runtime: nodejs18.x
+      Handler: src/handlers/getProductDetails.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            return {
+              statusCode: 200,
+              body: JSON.stringify({ message: 'Get product details' })
+            };
+          };
+          
+  AddProductFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'products-api-addProduct-${Environment}'
+      Runtime: nodejs18.x
+      Handler: src/handlers/addProduct.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            return {
+              statusCode: 200,
+              body: JSON.stringify({ message: 'Add product' })
             };
           };
       
@@ -48,36 +80,92 @@ Resources:
     Properties:
       Name: !Sub 'products-api-${Environment}'
       
-  ApiGatewayResource:
+  # /products resource
+  ProductsResource:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref ApiGateway
       ParentId: !GetAtt ApiGateway.RootResourceId
       PathPart: products
       
-  ApiGatewayMethod:
+  # GET /products - getAllProducts
+  GetProductsMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId: !Ref ApiGateway
-      ResourceId: !Ref ApiGatewayResource
+      ResourceId: !Ref ProductsResource
       HttpMethod: GET
       AuthorizationType: NONE
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations'
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetAllProductsFunction.Arn}/invocations'
+        
+  # POST /products - addProduct
+  PostProductsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref ProductsResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AddProductFunction.Arn}/invocations'
+        
+  # /products/{productId} resource
+  ProductIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !Ref ProductsResource
+      PathPart: '{productId}'
       
-  LambdaPermission:
+  # GET /products/{productId} - getProductDetails
+  GetProductDetailsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref ProductIdResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetProductDetailsFunction.Arn}/invocations'
+        
+  # Lambda permissions
+  GetAllProductsPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref LambdaFunction
+      FunctionName: !Ref GetAllProductsFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub '${ApiGateway}/*/*'
+      
+  GetProductDetailsPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetProductDetailsFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub '${ApiGateway}/*/*'
+      
+  AddProductPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref AddProductFunction
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub '${ApiGateway}/*/*'
       
   ApiGatewayDeployment:
     Type: AWS::ApiGateway::Deployment
-    DependsOn: ApiGatewayMethod
+    DependsOn: 
+      - GetProductsMethod
+      - PostProductsMethod
+      - GetProductDetailsMethod
     Properties:
       RestApiId: !Ref ApiGateway
       
