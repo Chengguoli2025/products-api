@@ -1,22 +1,25 @@
 "use strict";
 
-const { loadEnvConfig } = require('../config/env');
+const { loadEnvConfig } = require("../config/env");
 const ProductService = require("../services/productService");
 
 // Load environment variables from config files
-loadEnvConfig();
+(async () => {
+  await loadEnvConfig();
+})();
 
 const productService = new ProductService();
 
 exports.handler = async (event, context) => {
   try {
-    console.log('Environment Variables:');
-    console.log('NODE_ENV:', process.env.NODE_ENV);
-    console.log('DFA_API:', process.env.DFA_API);
-    console.log('DATABASE_URL:', process.env.DATABASE_URL);
-    
+    console.log("Environment Variables:");
+    console.log("NODE_ENV:", process.env.NODE_ENV);
+    console.log("DFA_API:", process.env.DFA_API);
+    console.log("DATABASE_URL:", process.env.DATABASE_URL);
+    console.log("DB_PASSWORD:", process.env.DB_PASSWORD);
+
     const productData = JSON.parse(event.body || "{}");
-    
+
     if (!productData.name || !productData.price) {
       return {
         statusCode: 400,
@@ -32,8 +35,9 @@ exports.handler = async (event, context) => {
         environment: {
           NODE_ENV: process.env.NODE_ENV,
           DFA_API: process.env.DFA_API,
-          DATABASE_URL: process.env.DATABASE_URL
-        }
+          DATABASE_URL: process.env.DATABASE_URL,
+          DB_PASSWORD: process.env.DB_PASSWORD ? "***masked***" : "not set",
+        },
       }),
     };
   } catch (err) {

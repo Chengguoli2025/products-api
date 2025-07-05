@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
+const { loadParameterStoreSecrets } = require('./parameterStore');
 
 // Load environment variables from .env file
-function loadEnvConfig() {
+async function loadEnvConfig() {
   const env = process.env.NODE_ENV || 'local';
   const envPath = path.join(__dirname, '../..', `.env.${env}`);
   
@@ -24,6 +25,11 @@ function loadEnvConfig() {
       });
       
       console.log(`Loaded environment config for: ${env}`);
+      
+      // Load secrets from Parameter Store (only in Lambda)
+      if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
+        await loadParameterStoreSecrets();
+      }
     } else {
       console.log(`No config file found at: ${envPath}`);
     }

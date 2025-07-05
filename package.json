@@ -13,5 +13,8 @@
   "devDependencies": {
     "eslint": "^8.0.0",
     "serverless-offline": "^14.4.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-ssm": "^3.840.0"
   }
 }
