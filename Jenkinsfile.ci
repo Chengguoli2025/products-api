@@ -44,7 +44,7 @@ pipeline {
                     sh "mkdir -p /tmp/jenkins-artifacts"
                     
                     // Create zip file
-                    sh "zip -r products-api-${env.GIT_SHA}.zip src/ serverless.yml package.json"
+                    sh "zip -r products-api-${env.GIT_SHA}.zip src/ .env.* serverless.yml package.json"
                     
                     // Copy to shared location
                     sh "cp products-api-${env.GIT_SHA}.zip /tmp/jenkins-artifacts/"

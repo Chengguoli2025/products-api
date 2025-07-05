@@ -98,22 +98,15 @@ pipeline {
                                             --region ap-southeast-2
                                     """
                                     
-                                    // Read environment variables from JSON file and convert to AWS format
-                                    
-                                  def envFile = "config/env.${params.ENVIRONMENT}.json"
-                                  def envVars = sh(
-                                                    script: """jq -r 'to_entries | map("\\(.key)=\\(.value|tostring)") | join(",")' ${envFile}""",
-                                                    returnStdout: true
-                                                   ).trim()
-                                    
-                                    echo "Environment variables: ${envVars}"
-                                    
+                                    // Set NODE_ENV so Lambda loads correct config file
                                     sh """
                                         aws lambda update-function-configuration \
                                             --function-name ${func} \
-                                            --environment 'Variables={${envVars}}' \
+                                            --environment 'Variables={NODE_ENV=${params.ENVIRONMENT}}' \
                                             --region ap-southeast-2
                                     """
+                                    
+                                    echo "Set NODE_ENV=${params.ENVIRONMENT} for ${func}"
                                     
                                     echo "Updated Lambda function: ${func}"
                                 } else {

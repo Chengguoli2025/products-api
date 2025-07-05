@@ -1,6 +1,10 @@
 "use strict";
 
+const { loadEnvConfig } = require('../config/env');
 const ProductService = require("../services/productService");
+
+// Load environment variables from config files
+loadEnvConfig();
 
 const productService = new ProductService();
 

@@ -48,7 +48,6 @@ Resources:
       Environment:
         Variables:
           NODE_ENV: !Ref Environment
-          DFA_API: !Sub 'https://daf.${Environment}.tonyffenochezra.com'
       Code:
         ZipFile: |
           exports.handler = async (event) => {
@@ -71,7 +70,6 @@ Resources:
       Environment:
         Variables:
           NODE_ENV: !Ref Environment
-          DFA_API: !Sub 'https://daf.${Environment}.tonyffenochezra.com'
       Code:
         ZipFile: |
           exports.handler = async (event) => {
@@ -94,7 +92,6 @@ Resources:
       Environment:
         Variables:
           NODE_ENV: !Ref Environment
-          DFA_API: !Sub 'https://daf.${Environment}.tonyffenochezra.com'
       Code:
         ZipFile: |
           exports.handler = async (event) => {
