@@ -9,6 +9,7 @@ exports.handler = async (event, context) => {
     console.log('Environment Variables:');
     console.log('NODE_ENV:', process.env.NODE_ENV);
     console.log('DFA_API:', process.env.DFA_API);
+    console.log('DATABASE_URL:', process.env.DATABASE_URL);
     
     const productId = event.pathParameters?.productId;
     if (!productId) {
@@ -25,7 +26,8 @@ exports.handler = async (event, context) => {
         product,
         environment: {
           NODE_ENV: process.env.NODE_ENV,
-          DFA_API: process.env.DFA_API
+          DFA_API: process.env.DFA_API,
+          DATABASE_URL: process.env.DATABASE_URL
         }
       }),
     };

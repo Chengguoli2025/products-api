@@ -6,6 +6,11 @@ const productService = new ProductService();
 
 exports.handler = async (event, context) => {
   try {
+    console.log('Environment Variables:');
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+    console.log('DFA_API:', process.env.DFA_API);
+    console.log('DATABASE_URL:', process.env.DATABASE_URL);
+    
     const productData = JSON.parse(event.body || "{}");
     
     if (!productData.name || !productData.price) {
@@ -18,7 +23,14 @@ exports.handler = async (event, context) => {
     const newProduct = productService.addProduct(productData);
     return {
       statusCode: 201,
-      body: JSON.stringify(newProduct),
+      body: JSON.stringify({
+        product: newProduct,
+        environment: {
+          NODE_ENV: process.env.NODE_ENV,
+          DFA_API: process.env.DFA_API,
+          DATABASE_URL: process.env.DATABASE_URL
+        }
+      }),
     };
   } catch (err) {
     console.error("Lambda Error:", err);

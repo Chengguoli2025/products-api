@@ -98,11 +98,15 @@ pipeline {
                                             --region ap-southeast-2
                                     """
                                     
+                                    // Load environment variables from config file
+                                    def envVars = readJSON file: "config/env.${params.ENVIRONMENT}.json"
+                                    def envString = envVars.collect { k, v -> "${k}=${v}" }.join(',')
+                                    
                                     // Update environment variables
                                     sh """
                                         aws lambda update-function-configuration \
                                             --function-name ${func} \
-                                            --environment 'Variables={NODE_ENV=${params.ENVIRONMENT},DFA_API=https://daf.${params.ENVIRONMENT}.tonyffenochezra.com}' \
+                                            --environment 'Variables={${envString}}' \
                                             --region ap-southeast-2
                                     """
                                     
