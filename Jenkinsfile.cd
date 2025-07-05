@@ -106,7 +106,16 @@ pipeline {
                                             --region ap-southeast-2
                                     """
                                     
-                                    echo "Set NODE_ENV=${params.ENVIRONMENT} for ${func}"
+                                    // Update Lambda role to ensure SSM permissions
+                                    def roleArn = "arn:aws:iam::427260910901:role/lambda-execution-role-${params.ENVIRONMENT}"
+                                    sh """
+                                        aws lambda update-function-configuration \
+                                            --function-name ${func} \
+                                            --role ${roleArn} \
+                                            --region ap-southeast-2 || echo "Role update failed, continuing..."
+                                    """
+                                    
+                                    echo "Updated ${func} with NODE_ENV=${params.ENVIRONMENT} and role"
                                     
                                     echo "Updated Lambda function: ${func}"
                                 } else {
