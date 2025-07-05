@@ -99,15 +99,15 @@ pipeline {
                                     """
                                     
                                     // Update environment variables using config file
-                                    sh """
+                                    sh '''
                                         # Convert JSON to environment variables format
-                                        ENV_VARS=\$(cat config/env.${params.ENVIRONMENT}.json | jq -r 'to_entries | map("\(.key)=\(.value)") | join(",")')
+                                        ENV_VARS=$(cat config/env.''' + params.ENVIRONMENT + '''.json | jq -r 'to_entries | map("\(.key)=\(.value)") | join(",")')
                                         
                                         aws lambda update-function-configuration \
-                                            --function-name ${func} \
-                                            --environment "Variables={\$ENV_VARS}" \
+                                            --function-name ''' + func + ''' \
+                                            --environment "Variables={$ENV_VARS}" \
                                             --region ap-southeast-2
-                                    """
+                                    '''
                                     
                                     echo "Updated Lambda function: ${func}"
                                 } else {
