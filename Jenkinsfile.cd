@@ -99,14 +99,12 @@ pipeline {
                                     """
                                     
                                     // Read environment variables from JSON file and convert to AWS format
-                                    def envContent = readFile "config/env.${params.ENVIRONMENT}.json"
-                                    echo "Environment config: ${envContent}"
                                     
-                                    // Use jq to convert JSON to environment variables format
-                                    def envVars = sh(
-                                        script: "jq -r 'to_entries | map(\"\(.key)=\(.value|tostring)\") | join(\",\")' config/env.${params.ENVIRONMENT}.json",
-                                        returnStdout: true
-                                    ).trim()
+                                  def envFile = "config/env.${params.ENVIRONMENT}.json"
+                                  def envVars = sh(
+                                                    script: """jq -r 'to_entries | map("\\(.key)=\\(.value|tostring)") | join(",")' ${envFile}""",
+                                                    returnStdout: true
+                                                   ).trim()
                                     
                                     echo "Environment variables: ${envVars}"
                                     
