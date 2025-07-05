@@ -98,15 +98,17 @@ pipeline {
                                             --region ap-southeast-2
                                     """
                                     
-                                    // Update environment variables based on environment
-                                    def envVars = ''
-                                    if (params.ENVIRONMENT == 'dev') {
-                                        envVars = 'NODE_ENV=dev,DFA_API=https://daf.dev.tonyffenochezra.com,DATABASE_URL=https://db.dev.tonyffenochezra.com,REDIS_URL=redis://redis.dev.tonyffenochezra.com:6379,LOG_LEVEL=debug,MAX_CONNECTIONS=10,TIMEOUT=5000,FEATURE_FLAG_A=true,FEATURE_FLAG_B=false,API_VERSION=v1'
-                                    } else if (params.ENVIRONMENT == 'staging') {
-                                        envVars = 'NODE_ENV=staging,DFA_API=https://daf.staging.tonyffenochezra.com,DATABASE_URL=https://db.staging.tonyffenochezra.com,REDIS_URL=redis://redis.staging.tonyffenochezra.com:6379,LOG_LEVEL=info,MAX_CONNECTIONS=20,TIMEOUT=3000,FEATURE_FLAG_A=true,FEATURE_FLAG_B=true,API_VERSION=v1'
-                                    } else if (params.ENVIRONMENT == 'prod') {
-                                        envVars = 'NODE_ENV=prod,DFA_API=https://daf.prod.tonyffenochezra.com,DATABASE_URL=https://db.prod.tonyffenochezra.com,REDIS_URL=redis://redis.prod.tonyffenochezra.com:6379,LOG_LEVEL=error,MAX_CONNECTIONS=50,TIMEOUT=2000,FEATURE_FLAG_A=false,FEATURE_FLAG_B=true,API_VERSION=v2'
-                                    }
+                                    // Read environment variables from JSON file and convert to AWS format
+                                    def envContent = readFile "config/env.${params.ENVIRONMENT}.json"
+                                    echo "Environment config: ${envContent}"
+                                    
+                                    // Use Python to convert JSON to environment variables format
+                                    def envVars = sh(
+                                        script: "python3 -c \"import json; data=json.loads('''${envContent}'''); print(','.join([f'{k}={v}' for k,v in data.items()]))\"",
+                                        returnStdout: true
+                                    ).trim()
+                                    
+                                    echo "Environment variables: ${envVars}"
                                     
                                     sh """
                                         aws lambda update-function-configuration \
