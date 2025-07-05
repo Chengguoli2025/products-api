@@ -98,16 +98,14 @@ pipeline {
                                             --region ap-southeast-2
                                     """
                                     
-                                    // Load environment variables from config file
-                                    def envContent = readFile "config/env.${params.ENVIRONMENT}.json"
-                                    def envVars = new groovy.json.JsonSlurper().parseText(envContent)
-                                    def envString = envVars.collect { k, v -> "${k}=${v}" }.join(',')
-                                    
-                                    // Update environment variables
+                                    // Update environment variables using config file
                                     sh """
+                                        # Convert JSON to environment variables format
+                                        ENV_VARS=\$(cat config/env.${params.ENVIRONMENT}.json | jq -r 'to_entries | map("\(.key)=\(.value)") | join(",")')
+                                        
                                         aws lambda update-function-configuration \
                                             --function-name ${func} \
-                                            --environment 'Variables={${envString}}' \
+                                            --environment "Variables={\$ENV_VARS}" \
                                             --region ap-southeast-2
                                     """
                                     
