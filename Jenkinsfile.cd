@@ -102,9 +102,9 @@ pipeline {
                                     def envContent = readFile "config/env.${params.ENVIRONMENT}.json"
                                     echo "Environment config: ${envContent}"
                                     
-                                    // Use Python to convert JSON to environment variables format
+                                    // Use jq to convert JSON to environment variables format
                                     def envVars = sh(
-                                        script: "python3 -c \"import json; data=json.loads('''${envContent}'''); print(','.join([f'{k}={v}' for k,v in data.items()]))\"",
+                                        script: "jq -r 'to_entries | map(\"\(.key)=\(.value|tostring)\") | join(\",\")' config/env.${params.ENVIRONMENT}.json",
                                         returnStdout: true
                                     ).trim()
                                     
