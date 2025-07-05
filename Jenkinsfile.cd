@@ -99,7 +99,8 @@ pipeline {
                                     """
                                     
                                     // Load environment variables from config file
-                                    def envVars = readJSON file: "config/env.${params.ENVIRONMENT}.json"
+                                    def envContent = readFile "config/env.${params.ENVIRONMENT}.json"
+                                    def envVars = new groovy.json.JsonSlurper().parseText(envContent)
                                     def envString = envVars.collect { k, v -> "${k}=${v}" }.join(',')
                                     
                                     // Update environment variables
