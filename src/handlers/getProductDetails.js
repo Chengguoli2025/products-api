@@ -3,20 +3,18 @@
 const { loadEnvConfig } = require("../config/env");
 const ProductService = require("../services/productService");
 
-// Load environment variables from config files
-(async () => {
-  await loadEnvConfig();
-})();
-
 const productService = new ProductService();
 
 exports.handler = async (event, context) => {
   try {
+    // Load environment variables from config files
+    await loadEnvConfig();
+    
     console.log("Environment Variables:");
     console.log("NODE_ENV:", process.env.NODE_ENV);
     console.log("DFA_API:", process.env.DFA_API);
     console.log("DATABASE_URL:", process.env.DATABASE_URL);
-    console.log("DB_PASSWORD:", process.env.DB_PASSWORD);
+    console.log("DB_PASSWORD:", process.env.DB_PASSWORD ? '***masked***' : 'not set');
 
     const productId = event.pathParameters?.productId;
     if (!productId) {
