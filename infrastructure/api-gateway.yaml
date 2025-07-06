@@ -21,6 +21,20 @@ Resources:
     Properties:
       DomainName: !Sub '${SubDomain}.${DomainName}'
       ValidationMethod: DNS
+  
+  ParameterStorePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub 'products-api-parameter-store-${Environment}'
+      Description: 'Allows Lambda functions to read Parameter Store values'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - ssm:GetParameter
+              - ssm:GetParameters
+            Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/products-api/${Environment}/*'
       
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -35,16 +49,7 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      Policies:
-        - PolicyName: ParameterStoreAccess
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - ssm:GetParameter
-                  - ssm:GetParameters
-                Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/products-api/${Environment}/*'
+        - !Ref ParameterStorePolicy
       
   GetAllProductsFunction:
     Type: AWS::Lambda::Function
