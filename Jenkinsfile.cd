@@ -98,26 +98,44 @@ pipeline {
                                             --region ap-southeast-2
                                     """
                                     
-                                    // Set NODE_ENV so Lambda loads correct config file
-                                    sh """
-                                        aws lambda update-function-configuration \
-                                            --function-name ${func} \
-                                            --environment 'Variables={NODE_ENV=${params.ENVIRONMENT}}' \
-                                            --region ap-southeast-2
-                                    """
-                                    
-                                    // Get the role ARN from CloudFormation stack
+                                    // Get the role ARN from CloudFormation stack first
                                     def roleArn = sh(
-                                        script: '''aws cloudformation describe-stacks --stack-name products-api-gateway-''' + params.ENVIRONMENT + ''' --query "Stacks[0].Outputs[?OutputKey=='LambdaExecutionRoleArn'].OutputValue" --output text --region ap-southeast-2''',
+                                        script: '''aws cloudformation describe-stacks --stack-name products-api-gateway-''' + params.ENVIRONMENT + ''' --query "Stacks[0].Outputs[?OutputKey=='LambdaExecutionRoleArn'].OutputValue" --output text --region ap-southeast-2 2>/dev/null || echo "None"''',
                                         returnStdout: true
                                     ).trim()
                                     
-                                    if (roleArn && roleArn != 'None') {
+                                    if (roleArn && roleArn != 'None' && roleArn != '') {
+                                        echo "Found role ARN: ${roleArn}"
+                                        
+                                        // Update role first, then environment variables
                                         sh """
                                             aws lambda update-function-configuration \
                                                 --function-name ${func} \
                                                 --role ${roleArn} \
-                                                --region ap-southeast-2 || echo "Role update failed, continuing..."
+                                                --region ap-southeast-2
+                                        """
+                                        
+                                        // Wait for role update to complete
+                                        sh """
+                                            aws lambda wait function-updated \
+                                                --function-name ${func} \
+                                                --region ap-southeast-2
+                                        """
+                                        
+                                        // Then update environment variables
+                                        sh """
+                                            aws lambda update-function-configuration \
+                                                --function-name ${func} \
+                                                --environment 'Variables={NODE_ENV=${params.ENVIRONMENT}}' \
+                                                --region ap-southeast-2
+                                        """
+                                    } else {
+                                        echo "No role ARN found, updating environment variables only"
+                                        sh """
+                                            aws lambda update-function-configuration \
+                                                --function-name ${func} \
+                                                --environment 'Variables={NODE_ENV=${params.ENVIRONMENT}}' \
+                                                --region ap-southeast-2
                                         """
                                     }
                                     
