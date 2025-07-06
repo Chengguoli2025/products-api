@@ -108,7 +108,7 @@ pipeline {
                                     
                                     // Get the role ARN from CloudFormation stack
                                     def roleArn = sh(
-                                        script: "aws cloudformation describe-stacks --stack-name products-api-gateway-${params.ENVIRONMENT} --query 'Stacks[0].Outputs[?OutputKey==\`LambdaExecutionRoleArn\`].OutputValue' --output text --region ap-southeast-2",
+                                        script: '''aws cloudformation describe-stacks --stack-name products-api-gateway-''' + params.ENVIRONMENT + ''' --query "Stacks[0].Outputs[?OutputKey=='LambdaExecutionRoleArn'].OutputValue" --output text --region ap-southeast-2''',
                                         returnStdout: true
                                     ).trim()
                                     
