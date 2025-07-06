@@ -21,9 +21,6 @@ Resources:
     Properties:
       DomainName: !Sub '${SubDomain}.${DomainName}'
       ValidationMethod: DNS
-      DomainValidationOptions:
-        - DomainName: !Sub '${SubDomain}.${DomainName}'
-          HostedZoneId: !Sub '{{resolve:route53:hosted-zone-id:${DomainName}}}'
   
   ParameterStorePolicy:
     Type: AWS::IAM::ManagedPolicy
