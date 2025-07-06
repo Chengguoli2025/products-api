@@ -4,7 +4,7 @@
   "description": "Products API with Lambda and DynamoDB",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"No tests specified, skipping...\""
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.0.0",
