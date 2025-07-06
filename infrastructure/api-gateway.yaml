@@ -180,6 +180,7 @@ Resources:
   GetAllProductsPermission:
     Type: AWS::Lambda::Permission
     Condition: ShouldCreateLambdaFunctions
+    DependsOn: GetAllProductsFunction
     Properties:
       FunctionName: !Sub 'products-api-getAllProducts-${Environment}'
       Action: lambda:InvokeFunction
@@ -189,6 +190,7 @@ Resources:
   GetProductDetailsPermission:
     Type: AWS::Lambda::Permission
     Condition: ShouldCreateLambdaFunctions
+    DependsOn: GetProductDetailsFunction
     Properties:
       FunctionName: !Sub 'products-api-getProductDetails-${Environment}'
       Action: lambda:InvokeFunction
@@ -198,6 +200,7 @@ Resources:
   AddProductPermission:
     Type: AWS::Lambda::Permission
     Condition: ShouldCreateLambdaFunctions
+    DependsOn: AddProductFunction
     Properties:
       FunctionName: !Sub 'products-api-addProduct-${Environment}'
       Action: lambda:InvokeFunction
