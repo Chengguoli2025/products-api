@@ -46,7 +46,7 @@ pipeline {
                                     DomainName=${env.DOMAIN_NAME} \
                                     SubDomain=product-api.${params.ENVIRONMENT} \
                                     CreateLambdaFunctions=${createLambdaFunctions} \
-                                    HostedZoneId=Z09494101FQRZT7JTG6S1 \
+                                    HostedZoneId=Z03446223871XUH182D6F \
                                 --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
                         """
                     }

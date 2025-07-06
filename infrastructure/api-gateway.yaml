@@ -13,7 +13,7 @@ Parameters:
     Description: 'Set to false if Lambda functions already exist'
   HostedZoneId:
     Type: String
-    Default: 'Z09494101FQRZT7JTG6S1'
+    Default: 'Z03446223871XUH182D6F'
     Description: 'Hosted Zone ID for tonyffenochezra.com'
 
 Conditions:
