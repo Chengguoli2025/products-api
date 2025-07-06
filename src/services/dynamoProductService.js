@@ -3,7 +3,20 @@ const { DynamoDBDocumentClient, GetCommand, PutCommand, ScanCommand } = require(
 
 class DynamoProductService {
   constructor() {
-    const client = new DynamoDBClient({ region: process.env.AWS_DEFAULT_REGION || 'ap-southeast-2' });
+    const config = {
+      region: process.env.AWS_DEFAULT_REGION || 'ap-southeast-2'
+    };
+    
+    // Use LocalStack endpoint for local development
+    if (process.env.NODE_ENV === 'local' || process.env.IS_OFFLINE) {
+      config.endpoint = 'http://localhost:4566';
+      config.credentials = {
+        accessKeyId: 'test',
+        secretAccessKey: 'test'
+      };
+    }
+    
+    const client = new DynamoDBClient(config);
     this.docClient = DynamoDBDocumentClient.from(client);
     this.tableName = process.env.PRODUCTS_TABLE || `products-${process.env.NODE_ENV || 'dev'}`;
   }

@@ -3,6 +3,10 @@ service: products-api
 provider:
   name: aws
   runtime: nodejs18.x
+  region: ap-southeast-2
+  environment:
+    NODE_ENV: ${opt:stage, 'local'}
+    PRODUCTS_TABLE: products-${opt:stage, 'local'}
 
 plugins:
   - serverless-offline
