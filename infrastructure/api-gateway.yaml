@@ -176,9 +176,10 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:products-api-getProductDetails-${Environment}/invocations'
         
-  # Lambda permissions
+  # Lambda permissions (only created when functions are created)
   GetAllProductsPermission:
     Type: AWS::Lambda::Permission
+    Condition: ShouldCreateLambdaFunctions
     Properties:
       FunctionName: !Sub 'products-api-getAllProducts-${Environment}'
       Action: lambda:InvokeFunction
@@ -187,6 +188,7 @@ Resources:
       
   GetProductDetailsPermission:
     Type: AWS::Lambda::Permission
+    Condition: ShouldCreateLambdaFunctions
     Properties:
       FunctionName: !Sub 'products-api-getProductDetails-${Environment}'
       Action: lambda:InvokeFunction
@@ -195,6 +197,7 @@ Resources:
       
   AddProductPermission:
     Type: AWS::Lambda::Permission
+    Condition: ShouldCreateLambdaFunctions
     Properties:
       FunctionName: !Sub 'products-api-addProduct-${Environment}'
       Action: lambda:InvokeFunction
