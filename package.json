@@ -1,20 +1,17 @@
 {
   "name": "products-api",
   "version": "1.0.0",
-  "description": "products API for managing product data",
+  "description": "Products API with Lambda and DynamoDB",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"No test specified\" && exit 0",
-    "lint": "eslint .",
-    "start": "serverless offline start"
-  },
-  "author": "Your Name",
-  "license": "MIT",
-  "devDependencies": {
-    "eslint": "^8.0.0",
-    "serverless-offline": "^14.4.0"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@aws-sdk/client-ssm": "^3.840.0"
-  }
+    "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/lib-dynamodb": "^3.0.0",
+    "@aws-sdk/client-ssm": "^3.0.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

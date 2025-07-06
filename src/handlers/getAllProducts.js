@@ -12,11 +12,14 @@ exports.handler = async (event, context) => {
     
     console.log("Environment Variables:");
     console.log("NODE_ENV:", process.env.NODE_ENV);
+    console.log("PRODUCTS_TABLE:", process.env.PRODUCTS_TABLE);
     console.log("DFA_API:", process.env.DFA_API);
     console.log("DATABASE_URL:", process.env.DATABASE_URL);
     console.log("DB_PASSWORD:", process.env.DB_PASSWORD ? '***masked***' : 'not set');
 
+    console.log('Getting all products from DynamoDB...');
     const products = await productService.getAllProducts();
+    console.log('Products retrieved:', products.length);
     return {
       statusCode: 200,
       body: JSON.stringify({
