@@ -123,18 +123,22 @@ pipeline {
                                         """
                                         
                                         // Then update environment variables
+                                        def tableName = "products-${params.ENVIRONMENT}"
+                                        def timestamp = new Date().getTime()
                                         sh """
                                             aws lambda update-function-configuration \
                                                 --function-name ${func} \
-                                                --environment 'Variables={NODE_ENV=${params.ENVIRONMENT}}' \
+                                                --environment 'Variables={NODE_ENV=${params.ENVIRONMENT},PRODUCTS_TABLE=${tableName},CACHE_BUST=${timestamp}}' \
                                                 --region ap-southeast-2
                                         """
                                     } else {
                                         echo "No role ARN found, updating environment variables only"
+                                        def tableName = "products-${params.ENVIRONMENT}"
+                                        def timestamp = new Date().getTime()
                                         sh """
                                             aws lambda update-function-configuration \
                                                 --function-name ${func} \
-                                                --environment 'Variables={NODE_ENV=${params.ENVIRONMENT}}' \
+                                                --environment 'Variables={NODE_ENV=${params.ENVIRONMENT},PRODUCTS_TABLE=${tableName},CACHE_BUST=${timestamp}}' \
                                                 --region ap-southeast-2
                                         """
                                     }

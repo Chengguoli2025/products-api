@@ -1,9 +1,9 @@
 "use strict";
 
 const { loadEnvConfig } = require("../config/env");
-const ProductService = require("../services/productService");
+const DynamoProductService = require("../services/dynamoProductService");
 
-const productService = new ProductService();
+const productService = new DynamoProductService();
 
 exports.handler = async (event, context) => {
   try {
@@ -25,7 +25,7 @@ exports.handler = async (event, context) => {
       };
     }
 
-    const newProduct = productService.addProduct(productData);
+    const newProduct = await productService.addProduct(productData);
     return {
       statusCode: 201,
       body: JSON.stringify({

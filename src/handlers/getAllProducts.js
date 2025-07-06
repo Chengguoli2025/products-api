@@ -1,9 +1,9 @@
 "use strict";
 
 const { loadEnvConfig } = require("../config/env");
-const ProductService = require("../services/productService");
+const DynamoProductService = require("../services/dynamoProductService");
 
-const productService = new ProductService();
+const productService = new DynamoProductService();
 
 exports.handler = async (event, context) => {
   try {
@@ -16,7 +16,7 @@ exports.handler = async (event, context) => {
     console.log("DATABASE_URL:", process.env.DATABASE_URL);
     console.log("DB_PASSWORD:", process.env.DB_PASSWORD ? '***masked***' : 'not set');
 
-    const products = productService.getAllProducts();
+    const products = await productService.getAllProducts();
     return {
       statusCode: 200,
       body: JSON.stringify({
