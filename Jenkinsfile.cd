@@ -139,7 +139,28 @@ pipeline {
                                         """
                                     }
                                     
-                                    echo "Updated ${func} with NODE_ENV=${params.ENVIRONMENT} and role"
+                                    // Add API Gateway permission to invoke Lambda function
+                                    def apiGatewayId = sh(
+                                        script: '''aws cloudformation describe-stacks --stack-name products-api-gateway-''' + params.ENVIRONMENT + ''' --query "Stacks[0].Outputs[?OutputKey=='ApiGatewayId'].OutputValue" --output text --region ap-southeast-2 2>/dev/null || echo "None"''',
+                                        returnStdout: true
+                                    ).trim()
+                                    
+                                    if (apiGatewayId && apiGatewayId != 'None' && apiGatewayId != '') {
+                                        def accountId = sh(
+                                            script: 'aws sts get-caller-identity --query Account --output text',
+                                            returnStdout: true
+                                        ).trim()
+                                        
+                                        sh """
+                                            aws lambda add-permission \
+                                                --function-name ${func} \
+                                                --statement-id apigateway-invoke-${params.ENVIRONMENT} \
+                                                --action lambda:InvokeFunction \
+                                                --principal apigateway.amazonaws.com \
+                                                --source-arn "arn:aws:execute-api:ap-southeast-2:${accountId}:${apiGatewayId}/*/*" \
+                                                --region ap-southeast-2 || echo "Permission already exists or failed to add"
+                                        """
+                                    }
                                     
                                     echo "Updated Lambda function: ${func}"
                                 } else {
