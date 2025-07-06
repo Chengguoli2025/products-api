@@ -19,3 +19,19 @@ Resources:
           Fn::ImportValue: !Sub 'products-api-gateway-${Environment}-DomainName'
         HostedZoneId:
           Fn::ImportValue: !Sub 'products-api-gateway-${Environment}-HostedZoneId'
+
+Certificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Sub '${SubDomain}.${DomainName}'
+      ValidationMethod: DNS
+
+CertificateValidationRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneName: !Sub '${DomainName}.'
+      Name: !GetAtt Certificate.DomainValidationOptions.0.ResourceRecord.Name
+      Type: CNAME
+      TTL: 300
+      ResourceRecords:
+        - !GetAtt Certificate.DomainValidationOptions.0.ResourceRecord.Value
