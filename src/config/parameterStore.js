@@ -1,8 +1,19 @@
 const { SSMClient, GetParameterCommand } = require("@aws-sdk/client-ssm");
 
-const ssmClient = new SSMClient({
+const config = {
   region: process.env.AWS_DEFAULT_REGION || "ap-southeast-2",
-});
+};
+
+// Use LocalStack endpoint for local development
+if (process.env.NODE_ENV === 'local' || process.env.IS_OFFLINE) {
+  config.endpoint = 'http://localhost:4566';
+  config.credentials = {
+    accessKeyId: 'test',
+    secretAccessKey: 'test'
+  };
+}
+
+const ssmClient = new SSMClient(config);
 
 /**
  * Loads secrets from AWS Parameter Store and sets them in process.env.
