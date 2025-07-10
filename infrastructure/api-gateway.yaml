@@ -57,6 +57,7 @@ Resources:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - !Ref ParameterStorePolicy
         - !Ref DynamoDBPolicy
+        - !Ref MSKPolicy
   
   DynamoDBPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -73,6 +74,21 @@ Resources:
               - dynamodb:Scan
               - dynamodb:Query
             Resource: !GetAtt ProductsTable.Arn
+            
+  MSKPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub 'products-api-msk-${Environment}'
+      Description: 'Allows Lambda functions to connect to MSK cluster'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - kafka-cluster:Connect
+              - kafka-cluster:WriteData
+              - kafka-cluster:DescribeCluster
+            Resource: !Sub 'arn:aws:kafka:${AWS::Region}:${AWS::AccountId}:cluster/my-public-msk-cluster/*'
   
   ProductsTable:
     Type: AWS::DynamoDB::Table
