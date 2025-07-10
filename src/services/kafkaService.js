@@ -2,26 +2,51 @@ const { Kafka } = require("kafkajs");
 
 class KafkaService {
   constructor() {
-    this.kafka = new Kafka({
-      clientId: "products-api",
-      brokers: process.env.KAFKA_BROKERS.split(","),
-      connectionTimeout: 10000,
-      requestTimeout: 30000,
-    });
-    this.producer = this.kafka.producer({
-      maxInFlightRequests: 1,
-      idempotent: false,
-      transactionTimeout: 30000,
-    });
-    this.topicName = `product-event-v1-${process.env.NODE_ENV || "dev"}`;
+    try {
+      if (!process.env.KAFKA_BROKERS) {
+        console.error("KAFKA_BROKERS environment variable is not set");
+        this.disabled = true;
+        return;
+      }
+      
+      this.kafka = new Kafka({
+        clientId: "products-api",
+        brokers: process.env.KAFKA_BROKERS.split(","),
+        connectionTimeout: 10000,
+        requestTimeout: 30000,
+      });
+      this.producer = this.kafka.producer({
+        maxInFlightRequests: 1,
+        idempotent: false,
+        transactionTimeout: 30000,
+      });
+      this.topicName = `product-event-v1-${process.env.NODE_ENV || "dev"}`;
+      this.disabled = false;
+    } catch (error) {
+      console.error("Failed to initialize Kafka service:", error.message);
+      this.disabled = true;
+    }
   }
 
   async publishProductCreated(product) {
+    if (this.disabled) {
+      console.warn("Kafka service is disabled, skipping event publishing");
+      return;
+    }
+    
     let connected = false;
     console.log("publishProductCreated called with product:", product);
     console.log("Kafka topic:", this.topicName);
     try {
-      await this.producer.connect();
+      console.log("Attempting to connect to Kafka producer...");
+      
+      // Add timeout to prevent hanging
+      const connectPromise = this.producer.connect();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Connection timeout after 30 seconds')), 30000)
+      );
+      
+      await Promise.race([connectPromise, timeoutPromise]);
       connected = true;
       console.log("Kafka producer connected successfully");
       await this.producer.send({
