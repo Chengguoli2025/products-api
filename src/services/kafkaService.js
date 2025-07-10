@@ -1,4 +1,5 @@
 const { Kafka } = require("kafkajs");
+const { fromNodeProviderChain } = require("@aws-sdk/credential-providers");
 
 class KafkaService {
   constructor() {
@@ -8,18 +9,37 @@ class KafkaService {
         this.disabled = true;
         return;
       }
-      
+
+      // Get AWS credentials from Lambda execution role
+      const credentialProvider = fromNodeProviderChain();
+
       this.kafka = new Kafka({
         clientId: "products-api",
         brokers: process.env.KAFKA_BROKERS.split(","),
-        connectionTimeout: 10000,
-        requestTimeout: 30000,
+        connectionTimeout: 5000,
+        requestTimeout: 10000,
+        retry: {
+          retries: 2,
+          initialRetryTime: 300,
+        },
+        // Add SSL and IAM authentication for public MSK access
+        ssl: true,
+        sasl: {
+          mechanism: "aws",
+          authorizationIdentity: process.env.MSK_CLUSTER_ARN, // Your MSK cluster ARN
+          // Lambda automatically provides these environment variables
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+          sessionToken: process.env.AWS_SESSION_TOKEN,
+        },
       });
+
       this.producer = this.kafka.producer({
         maxInFlightRequests: 1,
         idempotent: false,
-        transactionTimeout: 30000,
+        transactionTimeout: 10000,
       });
+
       this.topicName = `product-event-v1-${process.env.NODE_ENV || "dev"}`;
       this.disabled = false;
     } catch (error) {
@@ -33,18 +53,43 @@ class KafkaService {
       console.warn("Kafka service is disabled, skipping event publishing");
       return;
     }
-    
+
     let connected = false;
     console.log("publishProductCreated called with product:", product);
     console.log("Kafka topic:", this.topicName);
     console.log("Kafka brokers:", process.env.KAFKA_BROKERS);
-    
+
     try {
       console.log("Attempting to connect to Kafka producer...");
-      
-      await this.producer.connect();
+
+      // Add explicit timeout wrapper
+      const connectWithTimeout = () => {
+        return new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(
+              new Error(
+                "Connection timeout after 8 seconds - likely VPC/network issue"
+              )
+            );
+          }, 8000);
+
+          this.producer
+            .connect()
+            .then(() => {
+              clearTimeout(timeout);
+              resolve();
+            })
+            .catch((err) => {
+              clearTimeout(timeout);
+              reject(err);
+            });
+        });
+      };
+
+      await connectWithTimeout();
       connected = true;
       console.log("Kafka producer connected successfully");
+
       await this.producer.send({
         topic: this.topicName,
         messages: [
@@ -64,6 +109,13 @@ class KafkaService {
       console.error("Failed to publish product created event:", error.message);
       console.error("Error stack:", error.stack);
       console.error("Error type:", error.constructor.name);
+
+      // Additional debugging info
+      if (error.message.includes("timeout")) {
+        console.error("NETWORK ISSUE: Lambda likely cannot reach MSK cluster");
+        console.error("SOLUTION: Put Lambda in same VPC as MSK cluster");
+      }
+
       // Don't throw error to avoid breaking product creation
       console.warn("Product creation will continue despite Kafka failure");
     } finally {
@@ -82,12 +134,12 @@ class KafkaService {
 }
 
 // Add global error handlers for debugging
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
 });
 
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught Exception:", error);
 });
 
 module.exports = KafkaService;
