@@ -43,8 +43,11 @@ pipeline {
                     // Create shared artifacts directory
                     sh "mkdir -p /tmp/jenkins-artifacts"
                     
-                    // Create zip file
-                    sh "zip -r products-api-${env.GIT_SHA}.zip src/ node_modules/ .env.* serverless.yml package.json"
+                    // Install only kafkajs for packaging
+                    sh 'rm -rf node_modules && npm install kafkajs --only=production'
+                    
+                    // Create zip file with only kafkajs dependency
+                    sh "zip -r products-api-${env.GIT_SHA}.zip src/ node_modules/ package.json"
                     
                     // Copy to shared location
                     sh "cp products-api-${env.GIT_SHA}.zip /tmp/jenkins-artifacts/"
