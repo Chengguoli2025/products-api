@@ -1,22 +1,11 @@
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, GetCommand, PutCommand, ScanCommand } = require('@aws-sdk/lib-dynamodb');
+const { getAWSConfig } = require('../config/awsConfig');
+const KafkaService = require('./kafkaService');
 
 class DynamoProductService {
   constructor() {
-    const config = {
-      region: process.env.AWS_DEFAULT_REGION || 'ap-southeast-2'
-    };
-    
-    // Use LocalStack endpoint for local development
-    if (process.env.NODE_ENV === 'local' || process.env.IS_OFFLINE) {
-      config.endpoint = 'http://localhost:4566';
-      config.credentials = {
-        accessKeyId: 'test',
-        secretAccessKey: 'test'
-      };
-    }
-    
-    const client = new DynamoDBClient(config);
+    const client = new DynamoDBClient(getAWSConfig());
     this.docClient = DynamoDBDocumentClient.from(client);
     this.tableName = process.env.PRODUCTS_TABLE || `products-${process.env.NODE_ENV || 'dev'}`;
   }
@@ -75,6 +64,11 @@ class DynamoProductService {
       });
       
       await this.docClient.send(command);
+      
+      // Publish product created event to Kafka
+      const kafkaService = new KafkaService();
+      await kafkaService.publishProductCreated(product);
+      
       return product;
     } catch (error) {
       console.error('Error adding product:', error);
