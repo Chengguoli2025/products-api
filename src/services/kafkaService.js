@@ -1,7 +1,5 @@
 const { Kafka } = require("kafkajs");
-const {
-  MskIamAuthenticationMechanism,
-} = require("@jm18457/kafkajs-msk-iam-authentication-mechanism");
+const { fromEnv } = require("@aws-sdk/credential-provider-env");
 
 class KafkaService {
   constructor() {
@@ -24,13 +22,28 @@ class KafkaService {
         ssl: true,
         sasl: {
           mechanism: "aws-msk-iam",
-          authenticationProvider: new MskIamAuthenticationMechanism({
-            region: process.env.AWS_REGION || "ap-southeast-2",
-            // Lambda automatically provides these environment variables
-            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-            sessionToken: process.env.AWS_SESSION_TOKEN,
-          }),
+          authenticationProvider: async () => {
+            try {
+              // Use AWS SDK credential provider
+              const credentials = await fromEnv()();
+              return {
+                accessKeyId: credentials.accessKeyId,
+                secretAccessKey: credentials.secretAccessKey,
+                sessionToken: credentials.sessionToken,
+              };
+            } catch (error) {
+              console.error(
+                "Failed to get AWS credentials from environment:",
+                error.message
+              );
+              // Fallback to environment variables directly
+              return {
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+                sessionToken: process.env.AWS_SESSION_TOKEN,
+              };
+            }
+          },
         },
       });
 
