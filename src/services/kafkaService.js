@@ -18,10 +18,12 @@ class KafkaService {
 
   async publishProductCreated(product) {
     let connected = false;
+    console.log("publishProductCreated called with product:", product);
+    console.log("Kafka topic:", this.topicName);
     try {
       await this.producer.connect();
       connected = true;
-
+      console.log("Kafka producer connected successfully");
       await this.producer.send({
         topic: this.topicName,
         messages: [
@@ -46,7 +48,10 @@ class KafkaService {
         try {
           await this.producer.disconnect();
         } catch (disconnectError) {
-          console.error("Error disconnecting Kafka producer:", disconnectError.message);
+          console.error(
+            "Error disconnecting Kafka producer:",
+            disconnectError.message
+          );
         }
       }
     }
