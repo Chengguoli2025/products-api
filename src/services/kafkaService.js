@@ -24,7 +24,7 @@ class KafkaService {
         ssl: true,
         sasl: {
           mechanism: "aws-msk-iam",
-          authenticationProvider: MskIamAuthenticationMechanism({
+          authenticationProvider: new MskIamAuthenticationMechanism({
             region: process.env.AWS_REGION || "ap-southeast-2",
             // Lambda automatically provides these environment variables
             accessKeyId: process.env.AWS_ACCESS_KEY_ID,
