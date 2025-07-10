@@ -18,6 +18,7 @@
     "@aws-sdk/client-ssm": "^3.0.0",
     "@aws-sdk/credential-providers": "^3.844.0",
     "@aws-sdk/lib-dynamodb": "^3.0.0",
+    "@jm18457/kafkajs-msk-iam-authentication-mechanism": "^3.1.2",
     "kafkajs": "^2.2.4"
   },
   "devDependencies": {

@@ -1,5 +1,7 @@
 const { Kafka } = require("kafkajs");
-const { fromNodeProviderChain } = require("@aws-sdk/credential-providers");
+const {
+  MskIamAuthenticationMechanism,
+} = require("@jm18457/kafkajs-msk-iam-authentication-mechanism");
 
 class KafkaService {
   constructor() {
@@ -10,9 +12,6 @@ class KafkaService {
         return;
       }
 
-      // Get AWS credentials from Lambda execution role
-      const credentialProvider = fromNodeProviderChain();
-
       this.kafka = new Kafka({
         clientId: "products-api",
         brokers: process.env.KAFKA_BROKERS.split(","),
@@ -22,15 +21,16 @@ class KafkaService {
           retries: 2,
           initialRetryTime: 300,
         },
-        // Add SSL and IAM authentication for public MSK access
         ssl: true,
         sasl: {
-          mechanism: "aws",
-          authorizationIdentity: process.env.MSK_CLUSTER_ARN, // Your MSK cluster ARN
-          // Lambda automatically provides these environment variables
-          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-          sessionToken: process.env.AWS_SESSION_TOKEN,
+          mechanism: "aws-msk-iam",
+          authenticationProvider: MskIamAuthenticationMechanism({
+            region: process.env.AWS_REGION || "ap-southeast-2",
+            // Lambda automatically provides these environment variables
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+            sessionToken: process.env.AWS_SESSION_TOKEN,
+          }),
         },
       });
 
@@ -61,6 +61,14 @@ class KafkaService {
 
     try {
       console.log("Attempting to connect to Kafka producer...");
+      console.log("Available AWS credentials:", {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID ? "Present" : "Missing",
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+          ? "Present"
+          : "Missing",
+        sessionToken: process.env.AWS_SESSION_TOKEN ? "Present" : "Missing",
+        region: process.env.AWS_REGION || "ap-southeast-2",
+      });
 
       // Add explicit timeout wrapper
       const connectWithTimeout = () => {
@@ -114,6 +122,11 @@ class KafkaService {
       if (error.message.includes("timeout")) {
         console.error("NETWORK ISSUE: Lambda likely cannot reach MSK cluster");
         console.error("SOLUTION: Put Lambda in same VPC as MSK cluster");
+      }
+
+      if (error.message.includes("SASL")) {
+        console.error("SASL authentication failed - check IAM permissions");
+        console.error("Ensure Lambda has proper MSK IAM permissions");
       }
 
       // Don't throw error to avoid breaking product creation
