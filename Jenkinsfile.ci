@@ -44,7 +44,7 @@ pipeline {
                     sh "mkdir -p /tmp/jenkins-artifacts"
                     
                     // Install required packages for packaging
-                    sh 'rm -rf node_modules && npm install kafkajs  --only=production'
+                    sh 'rm -rf node_modules && npm install kafkajs @jm18457/kafkajs-msk-iam-authentication-mechanism --only=production'
                     
                     // Create zip file with only kafkajs dependency
                     sh "zip -r products-api-${env.GIT_SHA}.zip src/ node_modules/ .env.* package.json"
