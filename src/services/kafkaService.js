@@ -37,16 +37,12 @@ class KafkaService {
     let connected = false;
     console.log("publishProductCreated called with product:", product);
     console.log("Kafka topic:", this.topicName);
+    console.log("Kafka brokers:", process.env.KAFKA_BROKERS);
+    
     try {
       console.log("Attempting to connect to Kafka producer...");
       
-      // Add timeout to prevent hanging
-      const connectPromise = this.producer.connect();
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Connection timeout after 30 seconds')), 30000)
-      );
-      
-      await Promise.race([connectPromise, timeoutPromise]);
+      await this.producer.connect();
       connected = true;
       console.log("Kafka producer connected successfully");
       await this.producer.send({
@@ -66,6 +62,8 @@ class KafkaService {
       console.log("Product created event published:", product.id);
     } catch (error) {
       console.error("Failed to publish product created event:", error.message);
+      console.error("Error stack:", error.stack);
+      console.error("Error type:", error.constructor.name);
       // Don't throw error to avoid breaking product creation
       console.warn("Product creation will continue despite Kafka failure");
     } finally {
@@ -82,5 +80,14 @@ class KafkaService {
     }
   }
 }
+
+// Add global error handlers for debugging
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+});
 
 module.exports = KafkaService;
