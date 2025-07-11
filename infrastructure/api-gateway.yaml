@@ -20,6 +20,53 @@ Conditions:
   ShouldCreateLambdaFunctions: !Equals [!Ref CreateLambdaFunctions, 'true']
 
 Resources:
+  DefaultVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 172.31.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: default
+
+  DefaultSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref DefaultVPC
+      CidrBlock: 172.31.0.0/20
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+
+  DefaultSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref DefaultVPC
+      CidrBlock: 172.31.16.0/20
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: true
+
+  DefaultSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref DefaultVPC
+      CidrBlock: 172.31.32.0/20
+      AvailabilityZone: !Select [2, !GetAZs '']
+      MapPublicIpOnLaunch: true
+
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for addProduct Lambda function
+      VpcId: !Ref DefaultVPC
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub 'products-api-lambda-sg-${Environment}'
+
   Certificate:
     Type: AWS::CertificateManager::Certificate
     Properties:
@@ -54,7 +101,7 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
         - !Ref ParameterStorePolicy
         - !Ref DynamoDBPolicy
         - !Ref MSKPolicy
@@ -158,6 +205,13 @@ Resources:
       Runtime: nodejs18.x
       Handler: src/handlers/addProduct.handler
       Role: !GetAtt LambdaExecutionRole.Arn
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroup
+        SubnetIds:
+          - !Ref DefaultSubnet1
+          - !Ref DefaultSubnet2
+          - !Ref DefaultSubnet3
       Environment:
         Variables:
           NODE_ENV: !Ref Environment
