@@ -1,9 +1,4 @@
 const { Kafka } = require("kafkajs");
-const { fromNodeProviderChain } = require("@aws-sdk/credential-providers");
-const {
-  awsIamAuthenticator,
-} = require("@jm18457/kafkajs-msk-iam-authentication-mechanism");
-
 class KafkaService {
   constructor() {
     try {
@@ -12,11 +7,9 @@ class KafkaService {
         brokers: process.env.KAFKA_BROKERS.split(","),
         ssl: true,
         sasl: {
-          mechanism: "aws-msk-iam",
-          authenticationProvider: awsIamAuthenticator({
-            region: "ap-southeast-2",
-            credentials: fromNodeProviderChain(),
-          }),
+          mechanism: "scram-sha-512",
+          username: "products-api", // Username from your secret
+          password: "product1234", // Password from your secret
         },
       });
 
