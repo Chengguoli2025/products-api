@@ -1,5 +1,5 @@
 const { Kafka } = require("kafkajs");
-const aws = require("aws-sdk");
+const { fromNodeProviderChain } = require("@aws-sdk/credential-providers");
 const {
   awsIamAuthenticator,
 } = require("@jm18457/kafkajs-msk-iam-authentication-mechanism");
@@ -19,7 +19,7 @@ class KafkaService {
           mechanism: "aws-msk-iam",
           authenticationProvider: awsIamAuthenticator({
             region: "ap-southeast-2",
-            credentials: new aws.EnvironmentCredentials("AWS"),
+            credentials: fromNodeProviderChain(),
           }),
         },
       });
