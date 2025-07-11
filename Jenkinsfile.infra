@@ -56,12 +56,12 @@ pipeline {
                             
                             // Get VPC resources from CloudFormation stack
                             def securityGroupId = sh(
-                                script: "aws cloudformation describe-stacks --stack-name products-api-gateway-${params.ENVIRONMENT} --query 'Stacks[0].Outputs[?OutputKey==\`LambdaSecurityGroupId\`].OutputValue' --output text --region ap-southeast-2",
+                                script: "aws cloudformation describe-stacks --stack-name products-api-gateway-${params.ENVIRONMENT} --query 'Stacks[0].Outputs[?OutputKey==`LambdaSecurityGroupId`].OutputValue' --output text --region ap-southeast-2",
                                 returnStdout: true
                             ).trim()
                             
                             def subnetIds = sh(
-                                script: "aws cloudformation describe-stacks --stack-name products-api-gateway-${params.ENVIRONMENT} --query 'Stacks[0].Outputs[?OutputKey==\`SubnetIds\`].OutputValue' --output text --region ap-southeast-2",
+                                script: "aws cloudformation describe-stacks --stack-name products-api-gateway-${params.ENVIRONMENT} --query 'Stacks[0].Outputs[?OutputKey==`SubnetIds`].OutputValue' --output text --region ap-southeast-2",
                                 returnStdout: true
                             ).trim()
                             
