@@ -9,11 +9,7 @@ class KafkaService {
     try {
       this.kafka = new Kafka({
         clientId: "my-lambda-client",
-        brokers: [
-          "b-1-public.mypublicmskcluster.amazonaws.com:9198",
-          "b-2-public.mypublicmskcluster.amazonaws.com:9198",
-          "b-3-public.mypublicmskcluster.amazonaws.com:9198",
-        ],
+        brokers: process.env.KAFKA_BROKERS.split(","),
         ssl: true,
         sasl: {
           mechanism: "aws-msk-iam",
