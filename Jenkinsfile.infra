@@ -29,13 +29,18 @@ pipeline {
                 ]) {
                     script {
                         // Check if Lambda functions already exist
-                        def functionsExist = sh(
+                        def getAllProductsExists = sh(
                             script: "aws lambda get-function --function-name products-api-getAllProducts-${params.ENVIRONMENT} --region ap-southeast-2 >/dev/null 2>&1 && echo 'true' || echo 'false'",
                             returnStdout: true
                         ).trim()
                         
-                        def createLambdaFunctions = (functionsExist == 'false') ? 'true' : 'false'
-                        echo "Lambda functions exist: ${functionsExist}, will create: ${createLambdaFunctions}"
+                        def processEventsExists = sh(
+                            script: "aws lambda get-function --function-name products-api-processProductEvents-${params.ENVIRONMENT} --region ap-southeast-2 >/dev/null 2>&1 && echo 'true' || echo 'false'",
+                            returnStdout: true
+                        ).trim()
+                        
+                        def createLambdaFunctions = (getAllProductsExists == 'false' || processEventsExists == 'false') ? 'true' : 'false'
+                        echo "getAllProducts exists: ${getAllProductsExists}, processEvents exists: ${processEventsExists}, will create: ${createLambdaFunctions}"
                         
                         sh """
                             aws cloudformation deploy \
