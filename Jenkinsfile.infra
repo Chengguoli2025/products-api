@@ -50,29 +50,7 @@ pipeline {
                                 --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
                         """
                         
-                        // If functions exist, update addProduct Lambda with VPC configuration
-                        if (functionsExist == 'true') {
-                            echo "Updating existing addProduct Lambda with VPC configuration"
-                            
-                            // Get VPC resources from CloudFormation stack
-                            def securityGroupId = sh(
-                                script: "aws cloudformation describe-stacks --stack-name products-api-gateway-${params.ENVIRONMENT} --query 'Stacks[0].Outputs[?OutputKey==`LambdaSecurityGroupId`].OutputValue' --output text --region ap-southeast-2",
-                                returnStdout: true
-                            ).trim()
-                            
-                            def subnetIds = sh(
-                                script: "aws cloudformation describe-stacks --stack-name products-api-gateway-${params.ENVIRONMENT} --query 'Stacks[0].Outputs[?OutputKey==`SubnetIds`].OutputValue' --output text --region ap-southeast-2",
-                                returnStdout: true
-                            ).trim()
-                            
-                            // Update Lambda function with VPC configuration
-                            sh """
-                                aws lambda update-function-configuration \
-                                    --function-name products-api-addProduct-${params.ENVIRONMENT} \
-                                    --vpc-config SubnetIds=${subnetIds},SecurityGroupIds=${securityGroupId} \
-                                    --region ap-southeast-2
-                            """
-                        }
+                        // VPC configuration removed - not needed for public MSK cluster
                     }
                 }
             }

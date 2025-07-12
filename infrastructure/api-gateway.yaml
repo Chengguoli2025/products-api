@@ -399,3 +399,13 @@ Outputs:
     Export:
       Name: !Sub '${AWS::StackName}-LambdaExecutionRoleArn'
       
+  LambdaSecurityGroupId:
+    Value: !Ref LambdaSecurityGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-LambdaSecurityGroupId'
+      
+  SubnetIds:
+    Value: !Join [',', [!Ref DefaultSubnet1, !Ref DefaultSubnet2, !Ref DefaultSubnet3]]
+    Export:
+      Name: !Sub '${AWS::StackName}-SubnetIds'
+      
