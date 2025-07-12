@@ -39,8 +39,10 @@ pipeline {
                             returnStdout: true
                         ).trim()
                         
-                        def createLambdaFunctions = (getAllProductsExists == 'false' || processEventsExists == 'false') ? 'true' : 'false'
-                        echo "getAllProducts exists: ${getAllProductsExists}, processEvents exists: ${processEventsExists}, will create: ${createLambdaFunctions}"
+                        def createLambdaFunctions = (getAllProductsExists == 'false') ? 'true' : 'false'
+                        def createProcessEventsFunction = (processEventsExists == 'false') ? 'true' : 'false'
+                        echo "getAllProducts exists: ${getAllProductsExists}, processEvents exists: ${processEventsExists}"
+                        echo "Will create main functions: ${createLambdaFunctions}, will create processEvents: ${createProcessEventsFunction}"
                         
                         sh """
                             aws cloudformation deploy \
@@ -51,6 +53,7 @@ pipeline {
                                     DomainName=${env.DOMAIN_NAME} \
                                     SubDomain=product-api.${params.ENVIRONMENT} \
                                     CreateLambdaFunctions=${createLambdaFunctions} \
+                                    CreateProcessEventsFunction=${createProcessEventsFunction} \
                                     HostedZoneId=Z03446223871XUH182D6F \
                                 --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
                         """

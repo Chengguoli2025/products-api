@@ -11,6 +11,11 @@ Parameters:
     Default: 'true'
     AllowedValues: ['true', 'false']
     Description: 'Set to false if Lambda functions already exist'
+  CreateProcessEventsFunction:
+    Type: String
+    Default: 'true'
+    AllowedValues: ['true', 'false']
+    Description: 'Set to true to create only processProductEvents function'
   HostedZoneId:
     Type: String
     Default: 'Z03446223871XUH182D6F'
@@ -18,6 +23,7 @@ Parameters:
 
 Conditions:
   ShouldCreateLambdaFunctions: !Equals [!Ref CreateLambdaFunctions, 'true']
+  ShouldCreateProcessEventsFunction: !Equals [!Ref CreateProcessEventsFunction, 'true']
 
 Resources:
   DefaultVPC:
@@ -221,7 +227,7 @@ Resources:
           
   ProcessProductEventsFunction:
     Type: AWS::Lambda::Function
-    Condition: ShouldCreateLambdaFunctions
+    Condition: ShouldCreateProcessEventsFunction
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
@@ -244,7 +250,7 @@ Resources:
           
   MSKEventSourceMapping:
     Type: AWS::Lambda::EventSourceMapping
-    Condition: ShouldCreateLambdaFunctions
+    Condition: ShouldCreateProcessEventsFunction
     DependsOn: ProcessProductEventsFunction
     Properties:
       EventSourceArn: !Sub 'arn:aws:kafka:${AWS::Region}:${AWS::AccountId}:cluster/my-public-msk-cluster/*'
