@@ -32,3 +32,12 @@ functions:
       - http:
           path: products
           method: post
+
+  processProductEvents:
+    handler: src/handlers/processProductEvents.handler
+    events:
+      - msk:
+          arn: ${env:MSK_CLUSTER_ARN}
+          topic: product-event-v1-${opt:stage, 'local'}
+          startingPosition: LATEST
+          batchSize: 10

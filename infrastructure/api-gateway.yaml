@@ -101,7 +101,7 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - !Ref ParameterStorePolicy
         - !Ref DynamoDBPolicy
         - !Ref MSKPolicy
@@ -134,6 +134,7 @@ Resources:
             Action:
               - kafka-cluster:Connect
               - kafka-cluster:WriteData
+              - kafka-cluster:ReadData
               - kafka-cluster:DescribeCluster
             Resource: !Sub 'arn:aws:kafka:${AWS::Region}:${AWS::AccountId}:cluster/my-public-msk-cluster/*'
   
@@ -205,13 +206,6 @@ Resources:
       Runtime: nodejs18.x
       Handler: src/handlers/addProduct.handler
       Role: !GetAtt LambdaExecutionRole.Arn
-      VpcConfig:
-        SecurityGroupIds:
-          - !Ref LambdaSecurityGroup
-        SubnetIds:
-          - !Ref DefaultSubnet1
-          - !Ref DefaultSubnet2
-          - !Ref DefaultSubnet3
       Environment:
         Variables:
           NODE_ENV: !Ref Environment
@@ -224,6 +218,41 @@ Resources:
               body: JSON.stringify({ message: 'Function created, waiting for deployment' })
             };
           };
+          
+  ProcessProductEventsFunction:
+    Type: AWS::Lambda::Function
+    Condition: ShouldCreateLambdaFunctions
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      FunctionName: !Sub 'products-api-processProductEvents-${Environment}'
+      Runtime: nodejs18.x
+      Handler: src/handlers/processProductEvents.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Environment
+          PRODUCTS_TABLE: !Ref ProductsTable
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            return {
+              statusCode: 200,
+              body: JSON.stringify({ message: 'Function created, waiting for deployment' })
+            };
+          };
+          
+  MSKEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: ShouldCreateLambdaFunctions
+    DependsOn: ProcessProductEventsFunction
+    Properties:
+      EventSourceArn: !Sub 'arn:aws:kafka:${AWS::Region}:${AWS::AccountId}:cluster/my-public-msk-cluster/*'
+      FunctionName: !Sub 'products-api-processProductEvents-${Environment}'
+      Topics:
+        - !Sub 'product-event-v1-${Environment}'
+      StartingPosition: LATEST
+      BatchSize: 10
       
   ApiGateway:
     Type: AWS::ApiGateway::RestApi
@@ -370,12 +399,3 @@ Outputs:
     Export:
       Name: !Sub '${AWS::StackName}-LambdaExecutionRoleArn'
       
-  LambdaSecurityGroupId:
-    Value: !Ref LambdaSecurityGroup
-    Export:
-      Name: !Sub '${AWS::StackName}-LambdaSecurityGroupId'
-      
-  SubnetIds:
-    Value: !Join [',', [!Ref DefaultSubnet1, !Ref DefaultSubnet2, !Ref DefaultSubnet3]]
-    Export:
-      Name: !Sub '${AWS::StackName}-SubnetIds'
