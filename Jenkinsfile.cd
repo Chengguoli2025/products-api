@@ -66,11 +66,12 @@ pipeline {
                         try {
                             echo "Deploying application code to Lambda functions in ${params.ENVIRONMENT}"
                             
-                            // Update all 3 Lambda functions (infrastructure pipeline creates them)
+                            // Update all 4 Lambda functions (infrastructure pipeline creates them)
                             def functions = [
                                 "products-api-getAllProducts-${params.ENVIRONMENT}",
                                 "products-api-getProductDetails-${params.ENVIRONMENT}",
-                                "products-api-addProduct-${params.ENVIRONMENT}"
+                                "products-api-addProduct-${params.ENVIRONMENT}",
+                                "products-api-processProductEvents-${params.ENVIRONMENT}"
                             ]
                             
                             // Update each Lambda function with new code
