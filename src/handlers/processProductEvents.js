@@ -5,22 +5,25 @@ const { loadEnvConfig } = require("../config/env");
 exports.handler = async (event, context) => {
   try {
     await loadEnvConfig();
-    
+
     console.log("Processing MSK events:", JSON.stringify(event, null, 2));
-    
-    for (const record of event.records) {
-      const topicName = Object.keys(record)[0];
-      const messages = record[topicName];
-      
-      console.log(`Processing ${messages.length} messages from topic: ${topicName}`);
-      
+
+    for (const topicPartition of Object.keys(event.records)) {
+      const messages = event.records[topicPartition];
+
+      console.log(
+        `Processing ${messages.length} messages from ${topicPartition}`
+      );
+
       for (const message of messages) {
         try {
-          const payload = JSON.parse(Buffer.from(message.value, 'base64').toString());
+          const payload = JSON.parse(
+            Buffer.from(message.value, "base64").toString()
+          );
           console.log("Processing event:", payload);
-          
+
           switch (payload.eventType) {
-            case 'PRODUCT_CREATED':
+            case "PRODUCT_CREATED":
               await handleProductCreated(payload.product);
               break;
             default:
@@ -31,7 +34,7 @@ exports.handler = async (event, context) => {
         }
       }
     }
-    
+
     return { statusCode: 200 };
   } catch (error) {
     console.error("MSK event processing error:", error);
